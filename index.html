@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello World!</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        width: 100%;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+        position: relative;
+      }
+
+      canvas {
+        position: absolute;
+        bottom: 11px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="cat" class="interactive" width="128" height="128"></canvas>
+    <div id="cmd-input" class="interactive" hidden>
+      <input type="text" class="interactive" id="cmd" list="options-list"/>
+      <datalist id="options-list" class="interactive"></datalist>
+      <button id="submit" class="interactive">Send</button>
+    </div>
+    <script type="module" src="/src/renderer.ts"></script>
+  </body>
+</html>

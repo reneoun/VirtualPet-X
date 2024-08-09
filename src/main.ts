@@ -35,32 +35,35 @@ const createWindow = () => {
     },
   });
 
-  mainWindow.setIgnoreMouseEvents(true, { forward: true });
-
+  
   ipcMain.on('data-back', (event, data:string) => {
     // const webContents = event.sender
     // console.log("webContents", webContents);
     console.log("data-back", data);
+    
+    if (data === '#$#ignoreMouseEvents') {
+      mainWindow.setIgnoreMouseEvents(true, { forward: true });
+    }
+    
     if (data.toLowerCase().startsWith('cmd')) {
       const cmd = data.split(' ')[1];
       const command = spawn.exec(cmd);
-
+      
       command.stdout.on('data', (data) => {
         console.log('stdout: ' + data);
       });
       command.stderr.on('data', (data) => {
         console.log('stderr: ' + data);
       });
-
+      
     }
   })
-
+  
   ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     win.setIgnoreMouseEvents(ignore, options)
   })
   
-  mainWindow.setAlwaysOnTop(true, 'screen-saver');
   
   // and load the index.html of the app.
   globalShortcut.register('CommandOrControl+Q', () => {
@@ -75,27 +78,33 @@ const createWindow = () => {
       return;
     } else {
       mainWindow.setIgnoreMouseEvents(true, { forward: true });
+      mainWindow.blur();
     }
   });
   
   globalShortcut.register('escape', () => {
     const customData = 'shortcut-escape';
     mainWindow.webContents.send('data', customData);
+    mainWindow.setIgnoreMouseEvents(true, { forward: true });
   });
-
+  
   mainWindow.on('focus', () => { 
     const customData = 'focus';
     mainWindow.webContents.send('data', customData);
   });
-
+  
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
   } else {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
-
+  
   // Open the DevTools.
   // mainWindow.webContents.openDevTools();
+
+  mainWindow.setAlwaysOnTop(true, 'screen-saver');
+  mainWindow.setIgnoreMouseEvents(true, { forward: true });
+  // mainWindow.setFocusable(false); // Input events will not be dispatched
 };
 
 // This method will be called when Electron has finished

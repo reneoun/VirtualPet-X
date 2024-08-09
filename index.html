@@ -10,7 +10,7 @@
       }
 
       body {
-        width: 100%;
+        width: 100vw;
         height: 100vh;
         margin: 0;
         padding: 0;
@@ -20,17 +20,34 @@
 
       canvas {
         position: absolute;
-        bottom: 11px;
+        bottom: 48px;
+        /* border: 1px dotted black; */
+      }
+
+      datalist {
+        max-height: 200px;
+        overflow-y: auto;
       }
     </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+    <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
   </head>
   <body>
-    <canvas id="cat" class="interactive" width="128" height="128"></canvas>
+    <canvas id="text-balloon"></canvas>
+    <canvas id="cat" class="interactive" width="120" height="90"></canvas>
+    <div id="md-preview" class="interactive" hidden>
+      <textarea id="md-textarea-preview" class="interactive" hidden></textarea>
+    </div>
     <div id="cmd-input" class="interactive" hidden>
       <input type="text" class="interactive" id="cmd" list="options-list"/>
       <datalist id="options-list" class="interactive"></datalist>
       <button id="submit" class="interactive">Send</button>
     </div>
+    <div id="md-edit" class="interactive" hidden>
+      <textarea id="md-editor" class="interactive" hidden></textarea>
+    </div>
     <script type="module" src="/src/renderer.ts"></script>
+    <script>
+    </script>
   </body>
 </html>

@@ -26,7 +26,14 @@
  * ```
  */
 
+// <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+// <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+
+import { c, s } from 'vite/dist/node/types.d-aGj9QkWt';
 import './index.css';
+// import 'https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css';
+// @ts-ignore
+// import SimpleMDE from 'https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js';
 
 const pngFiles = [
   "black_0.png",
@@ -82,15 +89,246 @@ const pngFiles = [
   "yellow_0.png"
 ];
 
+const pixelSymbols:any = {
+  'A': [
+    [0,1,1,0],
+    [1,0,0,1],
+    [1,1,1,1],
+    [1,0,0,1],
+    [1,0,0,1]
+  ],
+  'B': [
+    [1,1,1,0],
+    [1,0,0,1],
+    [1,1,1,0],
+    [1,0,0,1],
+    [1,1,1,0]
+  ],
+  'C': [
+    [0,1,1,1],
+    [1,0,0,0],
+    [1,0,0,0],
+    [1,0,0,0],
+    [0,1,1,1]
+  ],
+  'D': [
+    [1,1,1,0],
+    [1,0,0,1],
+    [1,0,0,1],
+    [1,0,0,1],
+    [1,1,1,0]
+  ],
+  'E': [
+    [1,1,1,1],
+    [1,0,0,0],
+    [1,1,1,0],
+    [1,0,0,0],
+    [1,1,1,1]
+  ],
+  'F': [
+    [1,1,1,1],
+    [1,0,0,0],
+    [1,1,1,0],
+    [1,0,0,0],
+    [1,0,0,0]
+  ],
+  'G': [
+    [0,1,1,1],
+    [1,0,0,0],
+    [1,0,1,1],
+    [1,0,0,1],
+    [0,1,1,1]
+  ],
+  'H': [
+    [1,0,0,1],
+    [1,0,0,1],
+    [1,1,1,1],
+    [1,0,0,1],
+    [1,0,0,1]
+  ],
+  'I': [
+    [1,1,1],
+    [0,1,0],
+    [0,1,0],
+    [0,1,0],
+    [1,1,1]
+  ],
+  'J': [
+    [0,0,0,1],
+    [0,0,0,1],
+    [0,0,0,1],
+    [1,0,0,1],
+    [0,1,1,0]
+  ],
+  'K': [
+    [1,0,0,1],
+    [1,0,1,0],
+    [1,1,0,0],
+    [1,0,1,0],
+    [1,0,0,1]
+  ],
+  'L': [
+    [1,0,0,0],
+    [1,0,0,0],
+    [1,0,0,0],
+    [1,0,0,0],
+    [1,1,1,1]
+  ],
+  'M': [
+    [1,0,0,0,1],
+    [1,1,0,1,1],
+    [1,0,1,0,1],
+    [1,0,0,0,1],
+    [1,0,0,0,1]
+  ],
+  'N': [
+    [1,0,0,0,1],
+    [1,1,0,0,1],
+    [1,0,1,0,1],
+    [1,0,0,1,1],
+    [1,0,0,0,1]
+  ],
+  'O': [
+    [0,1,1,0],
+    [1,0,0,1],
+    [1,0,0,1],
+    [1,0,0,1],
+    [0,1,1,0]
+  ],
+  'P': [
+    [1,1,1,0],
+    [1,0,0,1],
+    [1,1,1,0],
+    [1,0,0,0],
+    [1,0,0,0]
+  ],
+  'Q': [
+    [0,1,1,0,0],
+    [1,0,0,1,0],
+    [1,0,0,1,0],
+    [0,1,1,0,0],
+    [0,0,0,1,0]
+  ],
+  'R': [
+    [1,1,1,0],
+    [1,0,0,1],
+    [1,1,1,0],
+    [1,0,1,0],
+    [1,0,0,1]
+  ],
+  'S': [
+    [0,1,1,1],
+    [1,0,0,0],
+    [0,1,1,0],
+    [0,0,0,1],
+    [1,1,1,0]
+  ],
+  'T': [
+    [1,1,1],
+    [0,1,0],
+    [0,1,0],
+    [0,1,0],
+    [0,1,0]
+  ],
+  'U': [
+    [1,0,0,1],
+    [1,0,0,1],
+    [1,0,0,1],
+    [1,0,0,1],
+    [0,1,1,0]
+  ],
+  'V': [
+    [1,0,0,0,1],
+    [1,0,0,0,1],
+    [0,1,0,1,0],
+    [0,1,0,1,0],
+    [0,0,1,0,0]
+  ],
+  'W': [
+    [1,0,0,0,1],
+    [1,0,0,0,1],
+    [1,0,1,0,1],
+    [1,1,0,1,1],
+    [1,0,0,0,1]
+  ], 
+  'X': [
+    [1,0,0,1],
+    [1,0,0,1],
+    [0,1,1,0],
+    [1,0,0,1],
+    [1,0,0,1]
+  ],
+  'Y': [
+    [1,0,0,1],
+    [1,0,0,1],
+    [0,1,1,0],
+    [0,1,0,0],
+    [0,1,0,0]
+  ],
+  'Z': [
+    [1,1,1,1],
+    [0,0,0,1],
+    [0,0,1,0],
+    [0,1,0,0],
+    [1,1,1,1]
+  ],
+  ' ': [
+    [0,0],
+    [0,0],
+    [0,0],
+    [0,0],
+    [0,0]
+  ],
+  '.': [
+    [0],
+    [0],
+    [0],
+    [0],
+    [1]
+  ],
+  ',': [
+    [0],
+    [0],
+    [0],
+    [1],
+    [1]
+  ],
+  '!': [
+    [1],
+    [1],
+    [1],
+    [0],
+    [1]
+  ],
+  '?': [
+    [1,1,1],
+    [0,0,1],
+    [0,1,0],
+    [0,0,0],
+    [0,1,0]
+  ],
+}
 
 // console.log('👋 This message is being logged by "renderer.ts", included via Vite');
 window.addEventListener('DOMContentLoaded', () => {
-  let globalState: NodeJS.Timeout | null = null;
-  let globalStateString: string = "";
+  let global_StateIntervalID: NodeJS.Timeout | null = null;
+  let global_StateString: string = "";
+  let global_PrevStateString: string = "";
 
   const canvasCat = document.getElementById('cat') as HTMLCanvasElement;
   const submitButton = document.getElementById('submit') as HTMLButtonElement;
   const optionsList = document.getElementById('options-list') as HTMLUListElement;
+  
+  const divCmd = document.getElementById('cmd-input') as HTMLDivElement;
+  const textBalloon = document.getElementById('text-balloon') as HTMLCanvasElement;
+
+  let mdPreview = document.getElementById('md-preview') as HTMLDivElement;
+  let mdTextAreaPreview = document.getElementById('md-textarea-preview') as HTMLTextAreaElement;
+  let mdEdit = document.getElementById('md-edit') as HTMLDivElement;
+  let mdTextAreaEditor = document.getElementById('md-editor') as HTMLTextAreaElement;
+  
+  let simplemde:any = null;
+
   const ctx = canvasCat.getContext('2d');
   const cat = new Image();
   cat.src = './assets/black_4.png';
@@ -99,21 +337,117 @@ window.addEventListener('DOMContentLoaded', () => {
   const textInputContainer = document.querySelector("div#cmd-input");
   const textInput = document.querySelector("input#cmd") as HTMLInputElement;
 
+  const makeTextBalloon = (text: string, maxCharLine: number = 16) => {
+    const pixelSize = 4;
+
+    textBalloon.style.display = 'block';
+    textBalloon.style.backgroundColor = 'white';
+    textBalloon.height = 64;
+    textBalloon.width = text.length * 5 * pixelSize;
+    textBalloon.style.marginBottom = '5px';
+    const ctx2 = textBalloon.getContext('2d');
+
+    let positionX = 2;
+    let positionY = 2;
+
+    let words = text.split(' ');
+    let lines:string[] = [""];
+    let wordIndex = 0;
+    while (wordIndex < words.length) {
+      let currentWord = words[wordIndex];
+      let lastLine = lines.at(-1);
+      if (lastLine.length + currentWord.length <= maxCharLine) {
+        lastLine = lastLine === "" ? currentWord : `${lastLine} ${currentWord}`;
+        lines[lines.length - 1] = lastLine;
+        wordIndex++;
+      } else if (currentWord.length > maxCharLine) {
+        lines.push(currentWord);
+        wordIndex++;
+      } else {
+        lines.push("");
+      }
+    }
+
+    let linesLength = lines.map(line => {
+      let lineLength = 0;
+      for (let i = 0; i < line.length; i++) {
+        let [x,y] = makePixelLetter(line[i], 0, 0, null);
+        lineLength += x;
+      }
+      return lineLength;
+    });
+
+
+
+    let maxPositionX = 0
+    for (let textLine of lines) {
+      for (let i = 0; i < textLine.length; i++) {
+        let letter = textLine[i];
+        [positionX, positionY] = makePixelLetter(letter, positionX, positionY, ctx2);
+        positionX += 1;
+        if (positionX > maxPositionX) maxPositionX = positionX;
+      }
+      positionX = 2;
+      positionY += 8;
+    }
+
+    // textBalloon.width = maxPositionX * pixelSize;
+  };
+
+  const makePixelLetter = (letter: string, startX: number, startY: number, ctx3:CanvasRenderingContext2D|null) => {
+    let upperLetter = letter.toUpperCase();
+    if (Object.keys(pixelSymbols).indexOf(upperLetter) === -1) return [startX, startY];
+    const letterMatrix = pixelSymbols[upperLetter];
+    const letterSize = letterMatrix[0].length;
+    const letterHeight = letterMatrix.length;
+    const pixelSize = 4;
+
+    let endX = startX + letterSize + 1;
+    let endY = startY;
+
+    if (ctx3 === null) return [endX, endY]
+
+    for (let i = 0; i < letterHeight; i++) {
+      for (let j = 0; j < letterSize; j++) {
+        if (letterMatrix[i][j] === 1) {
+          ctx3.fillStyle = 'black';
+          ctx3.fillRect((j + startX) * pixelSize, (i + startY) * pixelSize, pixelSize, pixelSize);
+        }
+      }
+    }
+    
+    return [endX, endY];
+  }
+  makeTextBalloon("Hello World ! Yalla ?!");
+
   submitButton.addEventListener('click', () => {
     let inputValue = textInput.value;
     (window as any).electronAPI.sendData(inputValue);
   });
 
+  // CLICK ON CAT LISTENER
   canvasCat.addEventListener('click', () => { 
-    showSpeechBubble(canvasCat, globalStateString);
+    showSpeechBubble(canvasCat, global_StateString);
   });
 
+  textInput.addEventListener('blur', () => {
+    optionsList.style.display = 'none';
+  }); // DO NOTHING
+
+  // TEXT INPUT LISTENERS
   textInput.addEventListener('input', () => { 
     let inputValue:string = textInput.value;
     if (inputValue.toLowerCase().startsWith('animal')) {
-      for (let pngFile of pngFiles) {
+      let filteredFiles = pngFiles
+        .filter((file) => file.includes(inputValue.split(' ')[1]));
+      let optionsListValues = Array.from(optionsList.children).map((el:HTMLOptionElement) => el.value);
+      for (let pngFile of filteredFiles) {
+        if (optionsListValues.includes("animal " + pngFile.replace('.png', ''))) {
+          continue;
+        }
         let optionEl = document.createElement('option');
         optionEl.value = "animal " + pngFile.replace('.png', '');
+        optionEl.classList.add('interactive');
         optionsList.appendChild(optionEl);
       }
     } else {
@@ -134,17 +468,59 @@ window.addEventListener('DOMContentLoaded', () => {
 
       (window as any).electronAPI.sendData(inputValue);
     }
+
+    if (e.key === "ArrowLeft") {
+      if (!simplemde) simplemde = new SimpleMDE({ 
+        element: mdTextAreaPreview,
+        initialValue: localStorage.getItem('mdEditorValue') || '',
+        toolbar: false,
+      });
+      mdTextAreaPreview.removeAttribute('hidden');
+      mdPreview.removeAttribute('hidden');
+      if (!simplemde.isPreviewActive()) {
+        simplemde.togglePreview();
+      }
+    }
+
+    if (e.key === "ArrowRight") {
+      if (!simplemde) simplemde = new SimpleMDE({ 
+        element: mdTextAreaEditor,
+        initialValue: localStorage.getItem('mdEditorValue') || '',
+      });
+      mdEdit.removeAttribute('hidden');
+      mdTextAreaEditor.removeAttribute('hidden');
+    }
+
+    setTimeout(() => {
+      simplemde.value(localStorage.getItem('mdEditorValue') || '');
+      simplemde.codemirror.refresh();
+      simplemde.codemirror.focus();
+      // simplemde.codemirror.setCursor();
+    }, 100);
   });
 
-  (window as any).electron.onMenuNav((customData:any) => {
+  // CUSTOM DATA FROM MAIN
+  (window as any).electron.dataFromMain((customData:any) => {
     if (customData === 'shortcut') bodyElement.classList.toggle('overlay');
     if (customData === 'shortcut-escape') bodyElement.classList.remove('overlay');
 
     textInputContainer.removeAttribute('hidden');
     textInput.focus();
+    setTimeout(() => {
+      textInput.focus();
+    }, 100);
 
     if (!bodyElement.classList.contains('overlay')) {
       textInputContainer.setAttribute('hidden', null);
+      let mdEditorValue = simplemde.value();
+      localStorage.setItem('mdEditorValue', mdEditorValue);
+      simplemde.toTextArea();
+      simplemde = null;
+      mdTextAreaPreview.setAttribute('hidden', null);
+      mdPreview.setAttribute('hidden', null);
+
+      mdEdit.setAttribute('hidden', null);
+      mdTextAreaEditor.setAttribute('hidden', null);
     }
   });
 
@@ -159,8 +535,9 @@ window.addEventListener('DOMContentLoaded', () => {
   const runAnimation = (startX:number=0, startY:number=0, steps:number=7, state:string="") => {
     let step = 0;
     let bodyElement = document.querySelector('body');
-    const screenStep = '5px';
+    const screenStep = '5px'; // WALKING SPEED
     const animationId = setInterval(() => {
+      // ANIMATION
       let tmpX = startX + step % 4;
       let tmpY = startY + Math.floor(step / 4);
       const [sourceX, sourceY] = getAnimationPart(tmpX, tmpY);
@@ -171,43 +548,56 @@ window.addEventListener('DOMContentLoaded', () => {
         step = 0;
       }
 
+      // SCREEN BOUNDARY CHECK + MOVING HORZONTALLY
       if (state === "walk-right") {
-        canvasCat.style.left = !!canvasCat.style.left ? `calc(${canvasCat.style.left} + ${screenStep})` : `100px`;
+        canvasCat.style.left = !!canvasCat.style.left 
+          ? `calc(${canvasCat.style.left} + ${screenStep})` 
+          : `100px`;
         if (canvasCat.offsetLeft + 200 > bodyElement.clientWidth) {
           animationState("walk-left");
         }
       }
       if (state === "walk-left") {
-        canvasCat.style.left = !!canvasCat.style.left ? `calc(${canvasCat.style.left} - ${screenStep})` : `100px`;
+        canvasCat.style.left = !!canvasCat.style.left 
+          ? `calc(${canvasCat.style.left} - ${screenStep})` 
+          : `100px`;
         if (canvasCat.offsetLeft < 0) {
           animationState("walk-right");
         }
       }
 
+      // SPEECH BUBBLE
       const timeNow = new Date();
       // When it's 12:00:00, show the speech bubble
-      if (timeNow.getHours() <= 23 && (timeNow.getMinutes() <= 2 || timeNow.getMinutes() >= 59)) {
-        showSpeechBubble(canvasCat, globalStateString, "./assets/pixel-speech-bubble [WORK OUT TIME !!].gif");
+      if (timeNow.getHours() <= 23 && (timeNow.getMinutes() <= 1 || timeNow.getMinutes() >= 59)) {
+        showSpeechBubble(canvasCat, global_StateString, "./assets/pixel-speech-bubble [WORK OUT TIME !!].gif");
       }
+
+      // RANDOM ACTIONS
+
     }, 150);
 
     return animationId;
   };
 
   const animationState = (state: string) => { 
-    globalStateString = state;
-    if (globalState) {
-      clearInterval(globalState);
+    global_PrevStateString = global_StateString;
+    global_StateString = state;
+    if (global_StateIntervalID) {
+      clearInterval(global_StateIntervalID);
     }
     switch (state) {
       case "walk-right":
-        globalState = runAnimation(12, 12, 4, "walk-right");
+        global_StateIntervalID = runAnimation(12, 12, 4, "walk-right");
         break;
       case "walk-left":
-        globalState = runAnimation(12, 4, 4, "walk-left");
+        global_StateIntervalID = runAnimation(12, 4, 4, "walk-left");
+        break;
+      case "sitting-right":
+        global_StateIntervalID = runAnimation(0, 12, 6, "sitting-right");
         break;
       default:
-        globalState = runAnimation();
+        global_StateIntervalID = runAnimation();
         break;
     }
   };

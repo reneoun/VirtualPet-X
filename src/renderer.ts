@@ -309,6 +309,8 @@ const pixelSymbols:any = {
   ],
 }
 
+const PIXEL_SIZE = 5;
+
 // console.log('👋 This message is being logged by "renderer.ts", included via Vite');
 window.addEventListener('DOMContentLoaded', () => {
   let global_StateIntervalID: NodeJS.Timeout | null = null;
@@ -320,7 +322,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const optionsList = document.getElementById('options-list') as HTMLUListElement;
   
   const divCmd = document.getElementById('cmd-input') as HTMLDivElement;
-  const textBalloon = document.getElementById('text-balloon') as HTMLCanvasElement;
+  const mainTextBalloon = document.getElementById('text-balloon') as HTMLCanvasElement;
+  const tailTextBalloon = document.createElement('canvas'); 
 
   let mdPreview = document.getElementById('md-preview') as HTMLDivElement;
   let mdTextAreaPreview = document.getElementById('md-textarea-preview') as HTMLTextAreaElement;
@@ -337,18 +340,15 @@ window.addEventListener('DOMContentLoaded', () => {
   const textInputContainer = document.querySelector("div#cmd-input");
   const textInput = document.querySelector("input#cmd") as HTMLInputElement;
 
-  const makeTextBalloon = (text: string, maxCharLine: number = 16) => {
-    const pixelSize = 4;
+  const makeMainTextBalloon = (text: string, maxCharLine: number = 32, absX = "50px", absY = "50px") => {
 
-    textBalloon.style.display = 'block';
-    textBalloon.style.backgroundColor = 'white';
-    textBalloon.height = 64;
-    textBalloon.width = text.length * 5 * pixelSize;
-    textBalloon.style.marginBottom = '5px';
-    const ctx2 = textBalloon.getContext('2d');
+    mainTextBalloon.style.display = 'block';
+    tailTextBalloon.style.display = 'block';
+    mainTextBalloon.style.marginBottom = '5px';
+    const ctx2 = mainTextBalloon.getContext('2d');
 
-    let positionX = 2;
-    let positionY = 2;
+    let positionX = 5;
+    let positionY = 3;
 
     let words = text.split(' ');
     let lines:string[] = [""];
@@ -368,17 +368,61 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    // CALCULATE TEXT BALLOON SIZE
     let linesLength = lines.map(line => {
       let lineLength = 0;
       for (let i = 0; i < line.length; i++) {
         let [x,y] = makePixelLetter(line[i], 0, 0, null);
-        lineLength += x;
+        lineLength += i === 0 ? x : x + 1;
       }
       return lineLength;
     });
+    let maxLineLength = Math.max(...linesLength);
+    mainTextBalloon.width = ((maxLineLength + 5) * PIXEL_SIZE) + 4 * PIXEL_SIZE;
+    mainTextBalloon.height = (lines.length * 8 * PIXEL_SIZE + 4) + 2 * PIXEL_SIZE;
+    ctx2.fillStyle = 'white';
+    ctx2.fillRect(0, 0, mainTextBalloon.width , mainTextBalloon.height);
 
+    // DRAW BALLOON
+    ctx2.fillStyle = 'black';
+    ctx2.fillRect(3 * PIXEL_SIZE, 0, (mainTextBalloon.width - 6 * PIXEL_SIZE), PIXEL_SIZE); // TOP
+    // LEFT TOP
+    ctx2.fillRect(2 * PIXEL_SIZE, 1 * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+    ctx2.fillRect(1 * PIXEL_SIZE, 2 * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
 
+    ctx2.fillRect(0, 3 * PIXEL_SIZE, PIXEL_SIZE, (mainTextBalloon.height - 6 * PIXEL_SIZE)); // LEFT
+    // LEFT BOTTOM
+    ctx2.fillRect(1 * PIXEL_SIZE, mainTextBalloon.height - 3 * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+    ctx2.fillRect(2 * PIXEL_SIZE, mainTextBalloon.height - 2 * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
 
+    ctx2.fillRect(3 * PIXEL_SIZE, mainTextBalloon.height - PIXEL_SIZE, (mainTextBalloon.width - 6 * PIXEL_SIZE), PIXEL_SIZE); // BOTTOM
+    // RIGHT BOTTOM
+    ctx2.fillRect(mainTextBalloon.width - 3 * PIXEL_SIZE, mainTextBalloon.height - 2 * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+    ctx2.fillRect(mainTextBalloon.width - 2 * PIXEL_SIZE, mainTextBalloon.height - 3 * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+
+    ctx2.fillRect(mainTextBalloon.width - PIXEL_SIZE, 3 * PIXEL_SIZE, PIXEL_SIZE, (mainTextBalloon.height - 6 * PIXEL_SIZE)); // RIGHT
+    // RIGHT TOP
+    ctx2.fillRect(mainTextBalloon.width - 2 * PIXEL_SIZE, 2 * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+    ctx2.fillRect(mainTextBalloon.width - 3 * PIXEL_SIZE, 1 * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+
+    // MAKE OUTSIDE CORNER TRANSPARENT
+    ctx2.clearRect(0, 0, 3 * PIXEL_SIZE, PIXEL_SIZE);
+    ctx2.clearRect(0, PIXEL_SIZE, 2* PIXEL_SIZE, PIXEL_SIZE);
+    ctx2.clearRect(0, 2 * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+
+    ctx2.clearRect(0, mainTextBalloon.height - PIXEL_SIZE, 3 * PIXEL_SIZE, PIXEL_SIZE);
+    ctx2.clearRect(0, mainTextBalloon.height - 2 * PIXEL_SIZE, 2 * PIXEL_SIZE, PIXEL_SIZE);
+    ctx2.clearRect(0, mainTextBalloon.height - 3 * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+
+    ctx2.clearRect(mainTextBalloon.width - PIXEL_SIZE, 0, PIXEL_SIZE, 3 * PIXEL_SIZE);
+    ctx2.clearRect(mainTextBalloon.width - 2 * PIXEL_SIZE, 0, PIXEL_SIZE, 2 * PIXEL_SIZE);
+    ctx2.clearRect(mainTextBalloon.width - 3 * PIXEL_SIZE, 0, PIXEL_SIZE, PIXEL_SIZE);
+
+    ctx2.clearRect(mainTextBalloon.width - 3 * PIXEL_SIZE, mainTextBalloon.height - PIXEL_SIZE, 3 * PIXEL_SIZE, PIXEL_SIZE);
+    ctx2.clearRect(mainTextBalloon.width - 2 * PIXEL_SIZE, mainTextBalloon.height - 2 * PIXEL_SIZE, 2 * PIXEL_SIZE, PIXEL_SIZE);
+    ctx2.clearRect(mainTextBalloon.width - PIXEL_SIZE, mainTextBalloon.height - 3 * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+
+    // DRAW TEXT
     let maxPositionX = 0
     for (let textLine of lines) {
       for (let i = 0; i < textLine.length; i++) {
@@ -387,12 +431,42 @@ window.addEventListener('DOMContentLoaded', () => {
         positionX += 1;
         if (positionX > maxPositionX) maxPositionX = positionX;
       }
-      positionX = 2;
+      positionX = 3;
       positionY += 8;
     }
 
-    // textBalloon.width = maxPositionX * pixelSize;
+    mainTextBalloon.style.position = 'absolute';
+    mainTextBalloon.style.bottom = absY;
+    mainTextBalloon.style.left = absX;
+
+    tailTextBalloon.width = 6 * PIXEL_SIZE;
+    tailTextBalloon.height = 8 * PIXEL_SIZE;
+    tailTextBalloon.style.position = 'absolute';
+    tailTextBalloon.style.bottom = `${parseInt(absY) - 29}px`;
+    tailTextBalloon.style.left = `${parseInt(absX) + 40}px`;
+
+    const ctx3 = tailTextBalloon.getContext('2d');
+    ctx3.fillStyle = 'white';
+    ctx3.fillRect(0, 0, tailTextBalloon.width, tailTextBalloon.height);
+    ctx3.fillStyle = 'black';
+    ctx3.fillRect(0, 1, PIXEL_SIZE, PIXEL_SIZE);
+    ctx3.fillRect(PIXEL_SIZE, 1, PIXEL_SIZE, 3 * PIXEL_SIZE);
+    ctx3.fillRect(0, 1 + 3 * PIXEL_SIZE, PIXEL_SIZE, 2 * PIXEL_SIZE);
+    ctx3.fillRect(PIXEL_SIZE, 1 + 5 * PIXEL_SIZE, 2 * PIXEL_SIZE, PIXEL_SIZE);
+    ctx3.fillRect(3*PIXEL_SIZE, 1 + 4 * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+    ctx3.fillRect(4 * PIXEL_SIZE, 1 + 3 * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+    ctx3.fillRect(5 * PIXEL_SIZE, 1, PIXEL_SIZE, 3 * PIXEL_SIZE);
+    ctx3.clearRect(0, 1 + PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+    ctx3.clearRect(0, 1 + 2*PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+    ctx3.clearRect(0, 1 + 5*PIXEL_SIZE, PIXEL_SIZE, 3*PIXEL_SIZE);
+    ctx3.clearRect(PIXEL_SIZE, 1 + 6 * PIXEL_SIZE, 5 * PIXEL_SIZE, 2 * PIXEL_SIZE);
+    ctx3.clearRect(3*PIXEL_SIZE, 1 + 5 * PIXEL_SIZE, 4 * PIXEL_SIZE, PIXEL_SIZE); 
+    ctx3.clearRect(4*PIXEL_SIZE, 1 + 4 * PIXEL_SIZE, 4 * PIXEL_SIZE, PIXEL_SIZE); 
+    ctx3.clearRect(5*PIXEL_SIZE, 1 + 3 * PIXEL_SIZE, 4 * PIXEL_SIZE, PIXEL_SIZE); 
+
+    document.body.appendChild(tailTextBalloon);
   };
+
 
   const makePixelLetter = (letter: string, startX: number, startY: number, ctx3:CanvasRenderingContext2D|null) => {
     let upperLetter = letter.toUpperCase();
@@ -400,7 +474,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const letterMatrix = pixelSymbols[upperLetter];
     const letterSize = letterMatrix[0].length;
     const letterHeight = letterMatrix.length;
-    const pixelSize = 4;
+    const pixelSize = 5;
 
     let endX = startX + letterSize + 1;
     let endY = startY;
@@ -418,7 +492,25 @@ window.addEventListener('DOMContentLoaded', () => {
     
     return [endX, endY];
   }
-  makeTextBalloon("Hello World ! Yalla ?!");
+
+  const showTextBalloon = (text: string, durationMS: number) => {
+    const intervalId = setInterval(() => {
+      const posCanvas = canvasCat.getBoundingClientRect();
+      let absX = posCanvas.left + window.scrollX + 50;
+      let absY = 140;
+      makeMainTextBalloon(text, 32, `${absX}px`, `${absY}px`);
+    }, 100);
+    setTimeout(() => {
+      mainTextBalloon.style.display = 'none';
+      tailTextBalloon.style.display = 'none';
+      clearInterval(intervalId);
+    }, durationMS);
+  };
+
+  
+  // makeMainTextBalloon("Hello World ! ", 32, "150px", "150px");
+
+
 
   submitButton.addEventListener('click', () => {
     let inputValue = textInput.value;
@@ -427,7 +519,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // CLICK ON CAT LISTENER
   canvasCat.addEventListener('click', () => { 
-    showSpeechBubble(canvasCat, global_StateString);
+    const catSounds = [
+      "Meoww !",
+      "Purr Purr"      
+    ];
+    let randomIndex = Math.floor(Math.random() * catSounds.length);
+    showTextBalloon(catSounds[randomIndex], 3000);
   });
 
   textInput.addEventListener('blur', () => {
@@ -470,6 +567,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     if (e.key === "ArrowLeft") {
+      // @ts-ignore
       if (!simplemde) simplemde = new SimpleMDE({ 
         element: mdTextAreaPreview,
         initialValue: localStorage.getItem('mdEditorValue') || '',
@@ -481,8 +579,9 @@ window.addEventListener('DOMContentLoaded', () => {
         simplemde.togglePreview();
       }
     }
-
+    
     if (e.key === "ArrowRight") {
+      // @ts-ignore
       if (!simplemde) simplemde = new SimpleMDE({ 
         element: mdTextAreaEditor,
         initialValue: localStorage.getItem('mdEditorValue') || '',
@@ -570,7 +669,7 @@ window.addEventListener('DOMContentLoaded', () => {
       const timeNow = new Date();
       // When it's 12:00:00, show the speech bubble
       if (timeNow.getHours() <= 23 && (timeNow.getMinutes() <= 1 || timeNow.getMinutes() >= 59)) {
-        showSpeechBubble(canvasCat, global_StateString, "./assets/pixel-speech-bubble [WORK OUT TIME !!].gif");
+        showTextBalloon("WORK OUT TIME !!", 1000);
       }
 
       // RANDOM ACTIONS
@@ -609,23 +708,3 @@ window.addEventListener('DOMContentLoaded', () => {
     animationState("walk-right");
   };
 });
-
-function showSpeechBubble(canvasCat: HTMLCanvasElement, globalStateString: string, src: string = "./assets/pixel-speech-bubble [Meoww !].gif") {
-  const imageElement = document.createElement('img');
-  imageElement.src = src;
-  imageElement.style.position = 'absolute';
-  let posCanvas = canvasCat.getBoundingClientRect();
-  imageElement.style.top = `${posCanvas.top - 150}px`;
-  imageElement.style.left = `${posCanvas.left + 50}px`;
-  const imageMove = setInterval(() => {
-    imageElement.remove();
-    let step = globalStateString === "walk-right" ? 5 : -5;
-    imageElement.style.left = `${parseInt(imageElement.style.left) + step}px`;
-    document.body.appendChild(imageElement);
-  }, 150);
-
-  setTimeout(() => {
-    clearInterval(imageMove);
-    imageElement.remove();
-  }, 3000);
-}

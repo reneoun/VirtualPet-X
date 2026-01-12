@@ -215,7 +215,7 @@ class VirtualPet {
 
     this.frameProgress.intervalId = setInterval(() => {
       let { currentFrame, totalWalkingFrames } = this.retrieveWalkingAnimationFrames();
-      console.log('current:', currentFrame, totalWalkingFrames);
+      // console.log('current:', currentFrame, totalWalkingFrames);
       
       if (FrameLocationState.ACTIONS[this.petState.action].singleCycle && currentFrame + 1 >= totalWalkingFrames && this.frameProgress.revertCycle === 0) {
         if (FrameLocationState.ACTIONS[this.petState.action].lockLastFrame && !this.frameProgress.frameLocked) {

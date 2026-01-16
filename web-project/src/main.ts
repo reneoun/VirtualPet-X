@@ -1,18 +1,82 @@
 import './style.css'
+import { createTerrain, TerrainManager } from './TerrainManager';
+
+const TILE_SIZE = 16;
+const TILE_SCALE = 3;
+const CELL_SIZE = TILE_SIZE * TILE_SCALE; // 48px rendered tiles
+let terrainManager: TerrainManager | null = null;
+
+function calculateGridSize() {
+  const maxWidth = window.innerWidth * 0.8;
+  const maxHeight = window.innerHeight * 0.8;
+
+  const columns = Math.floor(maxWidth / CELL_SIZE);
+  const rows = Math.floor(maxHeight / CELL_SIZE);
+
+  return {
+    columns,
+    rows,
+    width: columns * CELL_SIZE,
+    height: rows * CELL_SIZE
+  };
+}
+
+function initContainer() {
+  const grid = calculateGridSize();
+  const container = document.getElementById('walking-pet-container') as HTMLDivElement;
+
+  container.style.width = `${grid.width}px`;
+  container.style.height = `${grid.height}px`;
+  container.style.gridTemplateColumns = `repeat(${grid.columns}, ${CELL_SIZE}px)`;
+  container.style.gridTemplateRows = `repeat(${grid.rows}, ${CELL_SIZE}px)`;
+
+  const canvas = document.getElementById('petCanvas') as HTMLCanvasElement;
+  if (canvas) {
+    const currentLeft = parseFloat(canvas.style.left) || 0;
+    const currentTop = parseFloat(canvas.style.top) || 0;
+    const maxLeft = grid.width - canvas.width;
+    const maxTop = grid.height - canvas.height;
+
+    canvas.style.left = `${Math.max(0, Math.min(currentLeft, maxLeft))}px`;
+    canvas.style.top = `${Math.max(0, Math.min(currentTop, maxTop))}px`;
+  }
+}
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div id="walking-pet-container">
   </div>
 `;
 
-document.addEventListener('DOMContentLoaded', () => {
-  const walkingPetContainer = document.getElementById('walking-pet-container') as HTMLDivElement;
+initContainer();
+window.addEventListener('resize', () => {
+  initContainer();
+  // Regenerate terrain on resize
+  terrainManager?.handleResize();
+});
 
-  const virtualPet = new VirtualPet('assets/png_pets/black_4.png', walkingPetContainer);
-  const virtualPet2 = new VirtualPet('assets/png_pets/black_2.png', walkingPetContainer);
+// Initialize terrain and pet
+async function initApp() {
+  const container = document.getElementById('walking-pet-container') as HTMLDivElement;
+
+  // Initialize terrain (modular - can be removed/swapped easily)
+  // Scale matches TILE_SCALE for consistent sizing (16px tiles → 48px rendered)
+  terrainManager = await createTerrain({
+    container,
+    tilesetPath: 'assets/tileset_nature.png',
+    scale: TILE_SCALE,
+    onComplete: (result) => {
+      console.log(`Terrain generated: ${result.success ? 'success' : 'failed'} in ${result.iterations} iterations`);
+    }
+  });
+
+  // Initialize pets
+  const virtualPet = new VirtualPet('assets/png_pets/black_4.png', container);
+  const virtualPet2 = new VirtualPet('assets/png_pets/black_2.png', container);
   virtualPet.setPetState({ action: 'running_fast', direction: 'right', randomActions: true });
   virtualPet2.setPetState({ action: 'walking', direction: 'down-right', randomActions: true });
-});
+}
+
+initApp();
 
 type FrameProgress = {
   currentFrame: number;
@@ -79,9 +143,15 @@ class FrameLocationState {
     sitting: {
       startingFrameSourceX: 0,
       totalFrames: 6,
+<<<<<<< HEAD
+      msInterval: 320,
+      possibleActions: ['sitting', 'looking_around', 'laying_down', 'walking'],
+      actionsBeforeReverse: ['sitting', 'looking_around', 'laying_down'],
+=======
       msInterval: 220,
       possibleActions: ['looking_around', 'laying_down', 'walking'],
       actionsBeforeReverse: ['looking_around', 'laying_down'],
+>>>>>>> origin/master
       actionsAfterReverse: ['walking'],
       singleCycle: true,
     },
@@ -225,6 +295,37 @@ class VirtualPet {
     // }
 
     this.frameProgress.intervalId = setInterval(() => {
+<<<<<<< HEAD
+      let { currentFrame, totalWalkingFrames } = this.retrieveWalkingAnimationFrames();
+      // console.log('current:', currentFrame, totalWalkingFrames);
+
+      if (this.petState.randomActions && this.randomDuration < Date.now()) {
+        const duration = Math.floor(Math.random() * 3000) + 2000; // Random duration between 2-5 seconds
+        this.randomDuration = new Date(Date.now() + duration).getTime();
+        console.log(`Next random action change in ${duration} ms`);
+
+        const possibleActions = FrameLocationState.ACTIONS[this.petState.action].actionsBeforeReverse
+          || FrameLocationState.ACTIONS[this.petState.action].possibleActions || [];
+        const randomIndex = Math.floor(Math.random() * possibleActions.length);
+        const newPossibleState = { ...this.petState };
+        newPossibleState.action = possibleActions[randomIndex];
+
+        if (FrameLocationState.ACTIONS[newPossibleState.action].actionsBeforeReverse &&
+          FrameLocationState.ACTIONS[newPossibleState.action].actionsBeforeReverse!.includes(this.petState.action)) {
+          const newAction = possibleActions[randomIndex];
+          this.frameProgress.revertCycle = FrameLocationState.ACTIONS[newAction].totalFrames;
+          currentFrame = FrameLocationState.ACTIONS[newAction].totalFrames;
+          totalWalkingFrames = FrameLocationState.ACTIONS[newAction].totalFrames;
+          console.log(`Reversing animation for action: ${this.petState.action}`);
+        }
+
+        this.petState = newPossibleState;
+        console.log(`Randomly changed action to: ${this.petState.action}`);
+      }
+
+      if (FrameLocationState.ACTIONS[this.petState.action].singleCycle && currentFrame + 1 >= totalWalkingFrames && this.frameProgress.revertCycle === 0) {
+        if (FrameLocationState.ACTIONS[this.petState.action].lockLastFrame && !this.frameProgress.frameLocked) {
+=======
       if (this.frameProgress.currentMs === FrameLocationState.ACTIONS[this.petState.action].msInterval) {
         this.frameProgress.currentMs = 0;
       } else {
@@ -272,6 +373,7 @@ class VirtualPet {
       if (hasHitEndOfCycle) {
         const lockFrameActive = FrameLocationState.ACTIONS[this.petState.action].lockLastFrame && !this.isLockFrameActive();
         if (lockFrameActive) {
+>>>>>>> origin/master
           const lockConfig = FrameLocationState.ACTIONS[this.petState.action].lockLastFrame!;
           const minMs = lockConfig.minMs || 1000;
           const maxMs = lockConfig.maxMs || 3000;
@@ -324,10 +426,13 @@ class VirtualPet {
         }
       } else {
         this.frameProgress.currentFrame = (currentFrame + 1) % totalWalkingFrames;
+<<<<<<< HEAD
+=======
         if (FrameLocationState.ACTIONS[this.petState.action].reverseCycle && this.frameProgress.currentFrame === 0) {
           this.frameProgress.currentFrame = FrameLocationState.ACTIONS[this.petState.action].totalFrames - 1;
           this.frameProgress.revertCycle = FrameLocationState.ACTIONS[this.petState.action].totalFrames - 1;
         }
+>>>>>>> origin/master
       }
 
 
@@ -378,26 +483,32 @@ class VirtualPet {
 
   hitBoundary(): Direction | null {
     const canvas = this.ctx.canvas;
-    const rect = canvas.getBoundingClientRect();
     const speeds = FrameLocationState.SPEEDS[this.petState.action][this.petState.direction];
     const xSpeed = speeds.x;
     const ySpeed = speeds.y;
 
-    const newLeft = rect.left + xSpeed;
-    const newTop = rect.top + ySpeed;
-    const newRight = newLeft + rect.width;
-    const newBottom = newTop + rect.height;
+    const currentLeft = parseFloat(canvas.style.left) || 0;
+    const currentTop = parseFloat(canvas.style.top) || 0;
+    const newLeft = currentLeft + xSpeed;
+    const newTop = currentTop + ySpeed;
+    const newRight = newLeft + canvas.width;
+    const newBottom = newTop + canvas.height;
 
-    const parentRect = canvas.parentElement?.getBoundingClientRect();
-    const parentLeft = parentRect ? parentRect.left : 0;
-    const parentTop = parentRect ? parentRect.top : 0;
-    const parentRight = parentRect ? parentRect.right : window.innerWidth;
-    const parentBottom = parentRect ? parentRect.bottom : window.innerHeight;
+    const parent = canvas.parentElement;
+    const parentWidth = parent ? parent.clientWidth : window.innerWidth;
+    const parentHeight = parent ? parent.clientHeight : window.innerHeight;
 
+<<<<<<< HEAD
+    const hitHorizontal = newLeft < 0 ? 'left' :
+      newRight > parentWidth ? 'right' : null;
+    const hitVertical = newTop < 0 ? 'up' :
+      newBottom > parentHeight ? 'down' : null;
+=======
     const hitHorizontal = newLeft < parentLeft ? 'left' :
       newRight > parentRight ? 'right' : null;
     const hitVertical = newTop < parentTop ? 'up' :
       newBottom > parentBottom ? 'down' : null;
+>>>>>>> origin/master
 
     let hitDirection: Direction | null = hitVertical;
     if (hitHorizontal) {
@@ -417,12 +528,18 @@ class VirtualPet {
     const xSpeed = speeds.x;
     const ySpeed = speeds.y;
 
-    // Move canvas position
+    // Move canvas position relative to parent
     const canvas = this.ctx.canvas;
-    const rect = canvas.getBoundingClientRect();
+    const currentLeft = parseFloat(canvas.style.left) || 0;
+    const currentTop = parseFloat(canvas.style.top) || 0;
     canvas.style.position = 'absolute';
+<<<<<<< HEAD
+    canvas.style.left = `${currentLeft + xSpeed}px`;
+    canvas.style.top = `${currentTop + ySpeed}px`;
+=======
     canvas.style.left = `${rect.left + xSpeed}px`;
     canvas.style.top = `${rect.top + ySpeed}px`;
+>>>>>>> origin/master
 
   }
 

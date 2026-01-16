@@ -143,15 +143,9 @@ class FrameLocationState {
     sitting: {
       startingFrameSourceX: 0,
       totalFrames: 6,
-<<<<<<< HEAD
       msInterval: 320,
       possibleActions: ['sitting', 'looking_around', 'laying_down', 'walking'],
       actionsBeforeReverse: ['sitting', 'looking_around', 'laying_down'],
-=======
-      msInterval: 220,
-      possibleActions: ['looking_around', 'laying_down', 'walking'],
-      actionsBeforeReverse: ['looking_around', 'laying_down'],
->>>>>>> origin/master
       actionsAfterReverse: ['walking'],
       singleCycle: true,
     },
@@ -295,7 +289,13 @@ class VirtualPet {
     // }
 
     this.frameProgress.intervalId = setInterval(() => {
-<<<<<<< HEAD
+      // Check if we've reached the action's msInterval before advancing frame
+      if (this.frameProgress.currentMs < FrameLocationState.ACTIONS[this.petState.action].msInterval) {
+        this.frameProgress.currentMs += 20;
+        return;
+      }
+      this.frameProgress.currentMs = 0;
+
       let { currentFrame, totalWalkingFrames } = this.retrieveWalkingAnimationFrames();
       // console.log('current:', currentFrame, totalWalkingFrames);
 
@@ -325,55 +325,6 @@ class VirtualPet {
 
       if (FrameLocationState.ACTIONS[this.petState.action].singleCycle && currentFrame + 1 >= totalWalkingFrames && this.frameProgress.revertCycle === 0) {
         if (FrameLocationState.ACTIONS[this.petState.action].lockLastFrame && !this.frameProgress.frameLocked) {
-=======
-      if (this.frameProgress.currentMs === FrameLocationState.ACTIONS[this.petState.action].msInterval) {
-        this.frameProgress.currentMs = 0;
-      } else {
-        this.frameProgress.currentMs += 20;
-        return;
-      }
-
-      let { currentFrame, totalWalkingFrames } = this.retrieveWalkingAnimationFrames();
-      let hasChangedActionThisCycle = false;
-      // Handle Random Action Changes inside main interval
-      if (this.petState.randomActions && this.randomDuration < Date.now()) {
-        this.setRandomDuration(3500, 6000);
-
-        const lockFrameActive = this.isLockFrameActive();
-        const isInSingleCycleAction = FrameLocationState.ACTIONS[this.petState.action].singleCycle;
-        if (!lockFrameActive && !isInSingleCycleAction) {
-          const possibleActions = FrameLocationState.ACTIONS[this.petState.action].actionsBeforeReverse
-            || FrameLocationState.ACTIONS[this.petState.action].possibleActions || [];
-          const randomIndex = Math.floor(Math.random() * possibleActions.length);
-          const newPossibleState = { ...this.petState };
-          newPossibleState.action = possibleActions[randomIndex];
-
-          if (FrameLocationState.ACTIONS[newPossibleState.action].actionsBeforeReverse &&
-            FrameLocationState.ACTIONS[newPossibleState.action].actionsBeforeReverse!.includes(this.petState.action)) {
-            const newAction = possibleActions[randomIndex];
-            this.frameProgress.revertCycle = FrameLocationState.ACTIONS[newAction].totalFrames;
-            currentFrame = FrameLocationState.ACTIONS[newAction].totalFrames;
-            totalWalkingFrames = FrameLocationState.ACTIONS[newAction].totalFrames;
-            console.log(`Reversing animation for action: ${this.petState.action}`);
-          } else {
-            this.frameProgress.revertCycle = 0;
-            if (this.petState.action !== newPossibleState.action) currentFrame = (FrameLocationState.ACTIONS[this.petState.action].startingFrame ?? 0) - 1;
-          }
-
-          this.petState = newPossibleState;
-          hasChangedActionThisCycle = true;
-          console.log(`Randomly changed action to: ${this.petState.action}`);
-        }
-      }
-
-      const hasHitEndOfCycle = FrameLocationState.ACTIONS[this.petState.action].singleCycle &&
-        currentFrame + 1 >= totalWalkingFrames && this.frameProgress.revertCycle === 0 && !hasChangedActionThisCycle;
-
-      // Handle Action Completion for single cycle actions
-      if (hasHitEndOfCycle) {
-        const lockFrameActive = FrameLocationState.ACTIONS[this.petState.action].lockLastFrame && !this.isLockFrameActive();
-        if (lockFrameActive) {
->>>>>>> origin/master
           const lockConfig = FrameLocationState.ACTIONS[this.petState.action].lockLastFrame!;
           const minMs = lockConfig.minMs || 1000;
           const maxMs = lockConfig.maxMs || 3000;
@@ -426,13 +377,6 @@ class VirtualPet {
         }
       } else {
         this.frameProgress.currentFrame = (currentFrame + 1) % totalWalkingFrames;
-<<<<<<< HEAD
-=======
-        if (FrameLocationState.ACTIONS[this.petState.action].reverseCycle && this.frameProgress.currentFrame === 0) {
-          this.frameProgress.currentFrame = FrameLocationState.ACTIONS[this.petState.action].totalFrames - 1;
-          this.frameProgress.revertCycle = FrameLocationState.ACTIONS[this.petState.action].totalFrames - 1;
-        }
->>>>>>> origin/master
       }
 
 
@@ -463,7 +407,7 @@ class VirtualPet {
     if (possibleActionsAfterReverse.length > 0) {
       const randomIndex = Math.floor(Math.random() * possibleActionsAfterReverse.length);
       this.petState.action = possibleActionsAfterReverse[randomIndex];
-      this.frameProgress.currentFrame = FrameLocationState.ACTIONS[this.petState.action].startingFrame 
+      this.frameProgress.currentFrame = FrameLocationState.ACTIONS[this.petState.action].startingFrame
         ?? (FrameLocationState.ACTIONS[this.petState.action].totalFrames - 1);
     }
   }
@@ -498,17 +442,10 @@ class VirtualPet {
     const parentWidth = parent ? parent.clientWidth : window.innerWidth;
     const parentHeight = parent ? parent.clientHeight : window.innerHeight;
 
-<<<<<<< HEAD
     const hitHorizontal = newLeft < 0 ? 'left' :
       newRight > parentWidth ? 'right' : null;
     const hitVertical = newTop < 0 ? 'up' :
       newBottom > parentHeight ? 'down' : null;
-=======
-    const hitHorizontal = newLeft < parentLeft ? 'left' :
-      newRight > parentRight ? 'right' : null;
-    const hitVertical = newTop < parentTop ? 'up' :
-      newBottom > parentBottom ? 'down' : null;
->>>>>>> origin/master
 
     let hitDirection: Direction | null = hitVertical;
     if (hitHorizontal) {
@@ -533,13 +470,8 @@ class VirtualPet {
     const currentLeft = parseFloat(canvas.style.left) || 0;
     const currentTop = parseFloat(canvas.style.top) || 0;
     canvas.style.position = 'absolute';
-<<<<<<< HEAD
     canvas.style.left = `${currentLeft + xSpeed}px`;
     canvas.style.top = `${currentTop + ySpeed}px`;
-=======
-    canvas.style.left = `${rect.left + xSpeed}px`;
-    canvas.style.top = `${rect.top + ySpeed}px`;
->>>>>>> origin/master
 
   }
 

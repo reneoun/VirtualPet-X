@@ -12,7 +12,7 @@
 
 import { WFCSolver, WFCRenderer } from './wfc';
 import type { WFCConfig, WFCResult, WFCEvent, TileDefinition } from './wfc';
-import { groundTiles, TILE_SIZE } from './wfc/tilesets/natureTileset';
+import { natureTiles, NATURE_TILE_SIZE } from './wfc/tilesets/natureTileset';
 
 /** Decoration tile definition */
 export interface DecorationTile {
@@ -65,10 +65,10 @@ export class TerrainManager {
     constructor(config: TerrainConfig) {
         this.config = {
             tilesetPath: 'assets/tileset_nature.png',
-            tiles: groundTiles,
+            tiles: natureTiles,
             decorations: [],
             decorationDensity: 0.15,
-            tileSize: TILE_SIZE,
+            tileSize: NATURE_TILE_SIZE,
             scale: 1,
             ...config
         };

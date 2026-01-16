@@ -7,9 +7,9 @@
 
 import type { TileDefinition } from '../types';
 
-export const TILE_SIZE = 16;
+export const NATURE_TILE_SIZE = 16;
 
-export const groundTiles: TileDefinition[] = [
+export const natureTiles: TileDefinition[] = [
     {
         id: 'tile_5_2',
         position: { x: 5, y: 2 },
@@ -66,4 +66,6 @@ export const groundTiles: TileDefinition[] = [
     }
 ];
 
-export default groundTiles;
+export const simpleNatureTiles = natureTiles;
+
+export default natureTiles;

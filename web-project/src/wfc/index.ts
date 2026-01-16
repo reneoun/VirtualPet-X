@@ -39,7 +39,7 @@ export { WFCSolver } from './WFCSolver';
 export { WFCRenderer } from './WFCRenderer';
 
 // Export tileset data
-export { groundTiles, TILE_SIZE } from './tilesets/natureTileset';
+export { natureTiles, NATURE_TILE_SIZE } from './tilesets/natureTileset';
 
 // Convenience function to create and run WFC
 import type { WFCConfig, WFCResult, WFCProgressCallback } from './types';

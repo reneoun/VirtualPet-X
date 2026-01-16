@@ -392,10 +392,6 @@ class VirtualPet {
     }, 20);
   }
 
-  private isLockFrameActive(): boolean {
-    return this.frameProgress.frameLocked !== undefined;
-  }
-
   private setRandomDuration(minMs: number, maxMs: number) {
     const duration = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
     this.randomDuration = new Date(Date.now() + duration).getTime();

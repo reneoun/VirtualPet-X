@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Tile Connector</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+        }
+
+        header {
+            background: #16213e;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 2px solid #4ecca3;
+        }
+
+        header h1 {
+            color: #4ecca3;
+            font-size: 1.3rem;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-left: auto;
+        }
+
+        .header-controls label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+        }
+
+        .header-controls input {
+            width: 50px;
+            padding: 4px 8px;
+            border: 1px solid #4ecca3;
+            border-radius: 4px;
+            background: #0f3460;
+            color: #eee;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.15s;
+        }
+
+        .btn-primary {
+            background: #4ecca3;
+            color: #1a1a2e;
+        }
+
+        .btn-primary:hover {
+            background: #3db892;
+        }
+
+        .btn-secondary {
+            background: #0f3460;
+            color: #eee;
+            border: 1px solid #4ecca3;
+        }
+
+        .btn-secondary:hover {
+            background: #1a5a8a;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .main-layout {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+
+        /* Step indicator */
+        .steps {
+            display: flex;
+            gap: 0;
+            padding: 15px 20px;
+            background: #0f0f1a;
+            border-bottom: 1px solid #333;
+        }
+
+        .step {
+            padding: 10px 25px;
+            background: #16213e;
+            color: #666;
+            font-size: 13px;
+            border: 1px solid #333;
+            cursor: pointer;
+        }
+
+        .step:first-child {
+            border-radius: 6px 0 0 6px;
+        }
+
+        .step:last-child {
+            border-radius: 0 6px 6px 0;
+        }
+
+        .step.active {
+            background: #4ecca3;
+            color: #1a1a2e;
+            border-color: #4ecca3;
+        }
+
+        .step.completed {
+            background: #0f3460;
+            color: #4ecca3;
+            border-color: #4ecca3;
+        }
+
+        .step-num {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            line-height: 20px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 50%;
+            margin-right: 8px;
+            font-size: 11px;
+        }
+
+        /* Panels */
+        .panel {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .left-panel {
+            width: 380px;
+            background: #16213e;
+            border-right: 1px solid #333;
+            overflow-y: auto;
+            max-height: calc(100vh - 110px);
+        }
+
+        .center-panel {
+            flex: 1;
+            background: #0f0f1a;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-panel {
+            width: 300px;
+            background: #16213e;
+            border-left: 1px solid #333;
+        }
+
+        /* Tileset grid */
+        .tileset-grid {
+            display: grid;
+            gap: 2px;
+            background: #0a0a15;
+            padding: 2px;
+            border-radius: 8px;
+            width: fit-content;
+        }
+
+        .tile-cell {
+            cursor: pointer;
+            position: relative;
+            image-rendering: pixelated;
+            border: 2px solid transparent;
+            transition: all 0.1s;
+        }
+
+        .tile-cell:hover {
+            border-color: #fff;
+            transform: scale(1.05);
+            z-index: 10;
+        }
+
+        .tile-cell.selected {
+            border-color: #4ecca3;
+            box-shadow: 0 0 15px #4ecca3, inset 0 0 0 100px rgba(78, 204, 163, 0.4);
+        }
+
+        .tile-cell.added {
+            border-color: #f39c12;
+            box-shadow: inset 0 0 0 100px rgba(243, 156, 18, 0.25);
+        }
+
+        .tile-cell.connectable {
+            border-color: #3498db;
+            box-shadow: 0 0 8px #3498db;
+        }
+
+        .tile-cell.connected {
+            border-color: #27ae60;
+        }
+
+        .tile-cell.connected::after {
+            content: '✓';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #27ae60;
+            color: white;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Editor area */
+        .editor-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+        }
+
+        .editor-instruction {
+            text-align: center;
+            color: #888;
+            margin-bottom: 20px;
+        }
+
+        .editor-instruction h2 {
+            color: #4ecca3;
+            margin-bottom: 10px;
+        }
+
+        /* Connection editor */
+        .connection-editor {
+            display: grid;
+            grid-template-columns: 80px 120px 80px;
+            grid-template-rows: 80px 120px 80px;
+            gap: 5px;
+            align-items: center;
+            justify-items: center;
+        }
+
+        .current-tile {
+            grid-column: 2;
+            grid-row: 2;
+            width: 120px;
+            height: 120px;
+            image-rendering: pixelated;
+            border: 3px solid #4ecca3;
+            background: #222;
+        }
+
+        .edge-btn {
+            padding: 12px 8px;
+            border: 2px solid #555;
+            border-radius: 8px;
+            background: #16213e;
+            color: #888;
+            cursor: pointer;
+            font-size: 11px;
+            text-align: center;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .edge-btn:hover {
+            border-color: #4ecca3;
+            color: #fff;
+        }
+
+        .edge-btn.active {
+            border-color: #3498db;
+            background: #3498db;
+            color: #fff;
+        }
+
+        .edge-btn.has-connections {
+            border-color: #27ae60;
+            color: #27ae60;
+        }
+
+        .edge-btn.has-connections.active {
+            background: #27ae60;
+            color: #fff;
+        }
+
+        .edge-up {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        .edge-down {
+            grid-column: 2;
+            grid-row: 3;
+        }
+
+        .edge-left {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .edge-right {
+            grid-column: 3;
+            grid-row: 2;
+        }
+
+        .edge-count {
+            display: block;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        /* Tile selector for connections */
+        .connection-selector {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .connection-selector h3 {
+            color: #3498db;
+            margin-bottom: 15px;
+        }
+
+        .connection-tiles {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            max-width: 500px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #16213e;
+            border-radius: 8px;
+        }
+
+        .connection-tile {
+            width: 48px;
+            height: 48px;
+            cursor: pointer;
+            image-rendering: pixelated;
+            border: 2px solid #333;
+            border-radius: 4px;
+            transition: all 0.1s;
+        }
+
+        .connection-tile:hover {
+            border-color: #fff;
+            transform: scale(1.1);
+        }
+
+        .connection-tile.selected {
+            border-color: #27ae60;
+            box-shadow: 0 0 8px #27ae60;
+        }
+
+        /* Defined tiles list */
+        .tiles-list h3 {
+            color: #4ecca3;
+            font-size: 14px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        .defined-tile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #0f3460;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .defined-tile canvas {
+            image-rendering: pixelated;
+            border: 1px solid #4ecca3;
+        }
+
+        .defined-tile-info {
+            flex: 1;
+            font-size: 12px;
+        }
+
+        .defined-tile-info strong {
+            display: block;
+            color: #4ecca3;
+            margin-bottom: 3px;
+        }
+
+        .defined-tile-connections {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .conn-badge {
+            padding: 2px 6px;
+            background: #27ae60;
+            border-radius: 3px;
+            font-size: 10px;
+        }
+
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+
+        /* Form row */
+        .tile-form-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            align-items: center;
+        }
+
+        .tile-form-row input {
+            padding: 8px 12px;
+            border: 1px solid #4ecca3;
+            border-radius: 6px;
+            background: #0f3460;
+            color: #eee;
+        }
+
+        /* Output area */
+        .output-area {
+            background: #16213e;
+            padding: 15px 20px;
+            border-top: 1px solid #333;
+        }
+
+        .output-area textarea {
+            width: 100%;
+            height: 100px;
+            background: #0f3460;
+            color: #4ecca3;
+            border: 1px solid #4ecca3;
+            border-radius: 6px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 11px;
+            margin-top: 10px;
+        }
+
+        .output-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .empty-state {
+            color: #555;
+            text-align: center;
+            padding: 30px;
+        }
+
+        /* Quick actions */
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .quick-action {
+            padding: 6px 12px;
+            font-size: 11px;
+            background: #0f3460;
+            border: 1px solid #4ecca3;
+            color: #4ecca3;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .quick-action:hover {
+            background: #4ecca3;
+            color: #1a1a2e;
+        }
+
+        /* Tile switcher */
+        .tile-switcher {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #16213e;
+            border-radius: 8px;
+            justify-content: center;
+        }
+
+        .tile-switcher-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid #4ecca3;
+            background: #0f3460;
+            color: #4ecca3;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+
+        .tile-switcher-btn:hover:not(:disabled) {
+            background: #4ecca3;
+            color: #1a1a2e;
+        }
+
+        .tile-switcher-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .tile-switcher-select {
+            padding: 8px 12px;
+            border: 2px solid #4ecca3;
+            border-radius: 6px;
+            background: #0f3460;
+            color: #eee;
+            font-size: 14px;
+            cursor: pointer;
+            min-width: 150px;
+        }
+
+        .tile-switcher-select:focus {
+            outline: none;
+            box-shadow: 0 0 8px #4ecca3;
+        }
+
+        .tile-switcher-preview {
+            width: 48px;
+            height: 48px;
+            image-rendering: pixelated;
+            border: 2px solid #4ecca3;
+            border-radius: 4px;
+        }
+
+        .tile-switcher-info {
+            font-size: 12px;
+            color: #888;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>🧩 Visual Tile Connector</h1>
+        <div class="header-controls">
+            <label>Tile Size: <input type="number" id="tileSize" value="16" min="8" max="64"></label>
+            <button class="btn-secondary" onclick="reloadTileset()">Reload</button>
+        </div>
+    </header>
+
+    <div class="steps">
+        <div class="step active" onclick="goToStep(1)">
+            <span class="step-num">1</span> Select Tiles
+        </div>
+        <div class="step" onclick="goToStep(2)">
+            <span class="step-num">2</span> Define Connections
+        </div>
+        <div class="step" onclick="goToStep(3)">
+            <span class="step-num">3</span> Export
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <!-- Left: Tileset -->
+        <div class="left-panel panel">
+            <h3 style="color: #4ecca3; margin-bottom: 15px; font-size: 14px;">📦 Tileset (${tilesPerRow}×${tilesPerCol})
+            </h3>
+            <div style="overflow: auto; max-height: calc(100vh - 180px);">
+                <div class="tileset-grid" id="tilesetGrid"></div>
+            </div>
+        </div>
+
+        <!-- Center: Editor -->
+        <div class="center-panel">
+            <!-- Step 1: Select tiles -->
+            <div class="editor-content" id="step1Content">
+                <div class="editor-instruction">
+                    <h2>Step 1: Select Ground Tiles</h2>
+                    <p>Click on tiles in the left panel that should be used as ground tiles.</p>
+                    <p style="margin-top: 10px; color: #666;">These are the tiles WFC will place to fill the terrain.
+                    </p>
+                </div>
+
+                <div id="selectedTilesPreview"
+                    style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px;"></div>
+
+                <div style="margin-top: 30px;">
+                    <button class="btn-primary" onclick="goToStep(2)" id="nextStep1Btn" disabled>
+                        Next: Define Connections →
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Define connections -->
+            <div class="editor-content" id="step2Content" style="display: none;">
+                <div class="editor-instruction">
+                    <h2>Step 2: Define Connections</h2>
+                    <p>For each tile, click an edge then select which tiles can connect there.</p>
+                </div>
+
+                <div id="connectionEditorArea">
+                    <p style="color: #666;">Select a tile from the left panel to edit its connections.</p>
+                </div>
+            </div>
+
+            <!-- Step 3: Export -->
+            <div class="editor-content" id="step3Content" style="display: none;">
+                <div class="editor-instruction">
+                    <h2>Step 3: Export Configuration</h2>
+                    <p>Your tile configuration is ready! Copy or download the TypeScript code.</p>
+                </div>
+
+                <div class="output-controls" style="margin-top: 20px;">
+                    <button class="btn-primary" onclick="copyCode()">📋 Copy Code</button>
+                    <button class="btn-secondary" onclick="downloadCode()">💾 Download</button>
+                </div>
+
+                <textarea id="outputCode" readonly
+                    style="width: 600px; height: 300px; margin-top: 20px; background: #0f3460; color: #4ecca3; border: 1px solid #4ecca3; border-radius: 8px; padding: 15px; font-family: monospace; font-size: 12px;"></textarea>
+            </div>
+        </div>
+
+        <!-- Right: Defined tiles -->
+        <div class="right-panel panel">
+            <div class="tiles-list">
+                <h3>✅ Defined Tiles (<span id="tileCount">0</span>)</h3>
+                <div id="definedTilesList">
+                    <div class="empty-state">No tiles added yet</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let tileSize = 16;
+        let tilesPerRow = 0;
+        let tilesPerCol = 0;
+        let currentStep = 1;
+
+        // Selected tiles for ground
+        let groundTiles = []; // Array of {x, y, id, weight, connections: {up: [], down: [], left: [], right: []}}
+
+        // Currently editing
+        let editingTile = null;
+        let editingEdge = null;
+
+        const tileset = new Image();
+        tileset.src = 'assets/tileset_nature.png';
+        tileset.onload = () => {
+            tileSize = parseInt(document.getElementById('tileSize').value);
+            tilesPerRow = Math.floor(tileset.naturalWidth / tileSize);
+            tilesPerCol = Math.floor(tileset.naturalHeight / tileSize);
+            renderTilesetGrid();
+        };
+
+        function reloadTileset() {
+            tileSize = parseInt(document.getElementById('tileSize').value);
+            tilesPerRow = Math.floor(tileset.naturalWidth / tileSize);
+            tilesPerCol = Math.floor(tileset.naturalHeight / tileSize);
+            renderTilesetGrid();
+        }
+
+        function renderTilesetGrid() {
+            const grid = document.getElementById('tilesetGrid');
+            const cellSize = 36; // Smaller to fit more tiles
+
+            grid.style.gridTemplateColumns = `repeat(${tilesPerRow}, ${cellSize}px)`;
+            grid.innerHTML = '';
+
+            // Update header with tile count
+            document.querySelector('.left-panel h3').innerHTML = `📦 Tileset (${tilesPerRow}×${tilesPerCol})`;
+
+            for (let y = 0; y < tilesPerCol; y++) {
+                for (let x = 0; x < tilesPerRow; x++) {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = cellSize;
+                    canvas.height = cellSize;
+                    canvas.className = 'tile-cell';
+                    canvas.dataset.x = x;
+                    canvas.dataset.y = y;
+                    canvas.title = `(${x}, ${y})`;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.imageSmoothingEnabled = false;
+                    ctx.drawImage(tileset, x * tileSize, y * tileSize, tileSize, tileSize, 0, 0, cellSize, cellSize);
+
+                    canvas.onclick = () => handleTileClick(x, y);
+
+                    // Mark if already added
+                    if (groundTiles.find(t => t.x === x && t.y === y)) {
+                        canvas.classList.add('added');
+                    }
+
+                    grid.appendChild(canvas);
+                }
+            }
+        }
+
+        function handleTileClick(x, y) {
+            if (currentStep === 1) {
+                toggleTileSelection(x, y);
+            } else if (currentStep === 2) {
+                if (editingEdge) {
+                    toggleConnection(x, y);
+                } else {
+                    selectTileForEditing(x, y);
+                }
+            }
+        }
+
+        function toggleTileSelection(x, y) {
+            const existing = groundTiles.findIndex(t => t.x === x && t.y === y);
+
+            if (existing >= 0) {
+                groundTiles.splice(existing, 1);
+            } else {
+                groundTiles.push({
+                    x, y,
+                    id: `tile_${x}_${y}`,
+                    weight: 1,
+                    connections: { up: [], down: [], left: [], right: [] }
+                });
+            }
+
+            updateTilesetHighlights();
+            updateSelectedTilesPreview();
+            updateDefinedTilesList();
+
+            document.getElementById('nextStep1Btn').disabled = groundTiles.length === 0;
+        }
+
+        function updateTilesetHighlights() {
+            document.querySelectorAll('.tile-cell').forEach(cell => {
+                const x = parseInt(cell.dataset.x);
+                const y = parseInt(cell.dataset.y);
+
+                cell.classList.remove('added', 'selected', 'connectable', 'connected');
+
+                const tile = groundTiles.find(t => t.x === x && t.y === y);
+                if (tile) {
+                    cell.classList.add('added');
+                }
+
+                if (editingTile && editingTile.x === x && editingTile.y === y) {
+                    cell.classList.add('selected');
+                }
+
+                if (editingTile && editingEdge) {
+                    // Show which tiles are already connected
+                    if (editingTile.connections[editingEdge].some(c => c.x === x && c.y === y)) {
+                        cell.classList.add('connected');
+                    } else if (groundTiles.find(t => t.x === x && t.y === y)) {
+                        cell.classList.add('connectable');
+                    }
+                }
+            });
+        }
+
+        function updateSelectedTilesPreview() {
+            const container = document.getElementById('selectedTilesPreview');
+            container.innerHTML = groundTiles.map((t, i) => `
+                <div style="text-align: center;">
+                    <canvas width="48" height="48" id="preview_${i}" style="image-rendering: pixelated; border: 2px solid #4ecca3; border-radius: 4px;"></canvas>
+                    <div style="font-size: 11px; margin-top: 4px;">(${t.x}, ${t.y})</div>
+                </div>
+            `).join('');
+
+            // Draw previews
+            groundTiles.forEach((t, i) => {
+                const canvas = document.getElementById(`preview_${i}`);
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    ctx.imageSmoothingEnabled = false;
+                    ctx.drawImage(tileset, t.x * tileSize, t.y * tileSize, tileSize, tileSize, 0, 0, 48, 48);
+                }
+            });
+        }
+
+        function selectTileForEditing(x, y) {
+            const tile = groundTiles.find(t => t.x === x && t.y === y);
+            if (!tile) {
+                alert('This tile is not in your ground tiles. Add it in Step 1 first.');
+                return;
+            }
+
+            editingTile = tile;
+            editingEdge = null;
+            showConnectionEditor();
+            updateTilesetHighlights();
+        }
+
+        function showConnectionEditor() {
+            if (!editingTile) return;
+
+            const area = document.getElementById('connectionEditorArea');
+            const t = editingTile;
+            const currentIndex = groundTiles.findIndex(gt => gt.x === t.x && gt.y === t.y);
+
+            area.innerHTML = `
+                <div class="tile-switcher">
+                    <button class="tile-switcher-btn" onclick="switchTile(-1)" ${currentIndex === 0 ? 'disabled' : ''}>←</button>
+                    <canvas class="tile-switcher-preview" id="switcherPreview" width="48" height="48"></canvas>
+                    <select class="tile-switcher-select" onchange="switchToTile(this.value)">
+                        ${groundTiles.map((gt, i) => `
+                            <option value="${i}" ${i === currentIndex ? 'selected' : ''}>
+                                ${gt.id} (${gt.x}, ${gt.y})
+                            </option>
+                        `).join('')}
+                    </select>
+                    <button class="tile-switcher-btn" onclick="switchTile(1)" ${currentIndex === groundTiles.length - 1 ? 'disabled' : ''}>→</button>
+                    <span class="tile-switcher-info">${currentIndex + 1} of ${groundTiles.length}</span>
+                </div>
+                <div class="connection-editor">
+                    <button class="edge-btn edge-up ${t.connections.up.length ? 'has-connections' : ''}" onclick="selectEdge('up')">
+                        <span class="edge-count">${t.connections.up.length}</span>
+                        ↑ Up
+                    </button>
+                    
+                    <button class="edge-btn edge-left ${t.connections.left.length ? 'has-connections' : ''}" onclick="selectEdge('left')">
+                        <span class="edge-count">${t.connections.left.length}</span>
+                        ← Left
+                    </button>
+                    
+                    <canvas class="current-tile" id="currentTileCanvas" width="120" height="120"></canvas>
+                    
+                    <button class="edge-btn edge-right ${t.connections.right.length ? 'has-connections' : ''}" onclick="selectEdge('right')">
+                        <span class="edge-count">${t.connections.right.length}</span>
+                        Right →
+                    </button>
+                    
+                    <button class="edge-btn edge-down ${t.connections.down.length ? 'has-connections' : ''}" onclick="selectEdge('down')">
+                        <span class="edge-count">${t.connections.down.length}</span>
+                        ↓ Down
+                    </button>
+                </div>
+                
+                <div class="quick-actions">
+                    <button class="quick-action" onclick="connectAllEdges()">🔗 Connect to ALL tiles (all edges)</button>
+                    <button class="quick-action" onclick="connectSameAsThis()">📋 Same connections as this tile</button>
+                    <button class="quick-action" onclick="clearAllConnections()">🗑️ Clear all connections</button>
+                </div>
+                
+                <div id="edgeSelector" style="margin-top: 20px; display: none;">
+                    <h3 style="color: #3498db; margin-bottom: 10px; font-size: 14px;">
+                        Click tiles that can connect to the <span id="edgeName"></span> edge:
+                    </h3>
+                    <p style="font-size: 12px; color: #888; margin-bottom: 15px;">
+                        Blue = available to connect, Green ✓ = already connected
+                    </p>
+                    <div class="quick-actions" style="margin-bottom: 15px;">
+                        <button class="quick-action" onclick="selectAllForEdge()">Select All</button>
+                        <button class="quick-action" onclick="selectNoneForEdge()">Select None</button>
+                    </div>
+                </div>
+                
+                <div class="tile-form-row">
+                    <label>ID: <input type="text" id="tileIdInput" value="${t.id}" onchange="updateTileId(this.value)" style="width: 120px;"></label>
+                    <label>Weight: <input type="number" id="tileWeightInput" value="${t.weight}" min="0.1" step="0.1" onchange="updateTileWeight(this.value)" style="width: 60px;"></label>
+                </div>
+            `;
+
+            // Draw current tile
+            const canvas = document.getElementById('currentTileCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(tileset, t.x * tileSize, t.y * tileSize, tileSize, tileSize, 0, 0, 120, 120);
+
+            // Draw switcher preview
+            const switcherCanvas = document.getElementById('switcherPreview');
+            if (switcherCanvas) {
+                const sctx = switcherCanvas.getContext('2d');
+                sctx.imageSmoothingEnabled = false;
+                sctx.drawImage(tileset, t.x * tileSize, t.y * tileSize, tileSize, tileSize, 0, 0, 48, 48);
+            }
+        }
+
+        function switchTile(direction) {
+            const currentIndex = groundTiles.findIndex(gt => gt.x === editingTile.x && gt.y === editingTile.y);
+            const newIndex = currentIndex + direction;
+            if (newIndex >= 0 && newIndex < groundTiles.length) {
+                editingTile = groundTiles[newIndex];
+                editingEdge = null;
+                showConnectionEditor();
+                updateTilesetHighlights();
+            }
+        }
+
+        function switchToTile(indexStr) {
+            const index = parseInt(indexStr);
+            if (index >= 0 && index < groundTiles.length) {
+                editingTile = groundTiles[index];
+                editingEdge = null;
+                showConnectionEditor();
+                updateTilesetHighlights();
+            }
+        }
+
+        function selectEdge(edge) {
+            editingEdge = edge;
+
+            // Update button states
+            document.querySelectorAll('.edge-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.edge-${edge}`).classList.add('active');
+
+            // Show edge selector
+            document.getElementById('edgeSelector').style.display = 'block';
+            document.getElementById('edgeName').textContent = edge.toUpperCase();
+
+            updateTilesetHighlights();
+        }
+
+        function toggleConnection(x, y) {
+            if (!editingTile || !editingEdge) return;
+
+            const targetTile = groundTiles.find(t => t.x === x && t.y === y);
+            if (!targetTile) {
+                alert('You can only connect to tiles that are in your ground tiles list.');
+                return;
+            }
+
+            const connections = editingTile.connections[editingEdge];
+            const existingIdx = connections.findIndex(c => c.x === x && c.y === y);
+
+            if (existingIdx >= 0) {
+                connections.splice(existingIdx, 1);
+            } else {
+                connections.push({ x, y });
+            }
+
+            // Also add reverse connection
+            const oppositeEdge = { up: 'down', down: 'up', left: 'right', right: 'left' }[editingEdge];
+            const reverseConnections = targetTile.connections[oppositeEdge];
+            const reverseIdx = reverseConnections.findIndex(c => c.x === editingTile.x && c.y === editingTile.y);
+
+            if (existingIdx >= 0) {
+                // Removed, so remove reverse too
+                if (reverseIdx >= 0) reverseConnections.splice(reverseIdx, 1);
+            } else {
+                // Added, so add reverse too
+                if (reverseIdx < 0) reverseConnections.push({ x: editingTile.x, y: editingTile.y });
+            }
+
+            showConnectionEditor();
+            updateTilesetHighlights();
+            updateDefinedTilesList();
+        }
+
+        function connectAllEdges() {
+            if (!editingTile) return;
+
+            ['up', 'down', 'left', 'right'].forEach(edge => {
+                editingTile.connections[edge] = groundTiles.map(t => ({ x: t.x, y: t.y }));
+            });
+
+            // Add reverse connections for all
+            groundTiles.forEach(t => {
+                ['up', 'down', 'left', 'right'].forEach(edge => {
+                    const opposite = { up: 'down', down: 'up', left: 'right', right: 'left' }[edge];
+                    if (!t.connections[opposite].find(c => c.x === editingTile.x && c.y === editingTile.y)) {
+                        t.connections[opposite].push({ x: editingTile.x, y: editingTile.y });
+                    }
+                });
+            });
+
+            showConnectionEditor();
+            updateTilesetHighlights();
+            updateDefinedTilesList();
+        }
+
+        function clearAllConnections() {
+            if (!editingTile) return;
+
+            // Remove this tile from other tiles' connections
+            groundTiles.forEach(t => {
+                ['up', 'down', 'left', 'right'].forEach(edge => {
+                    t.connections[edge] = t.connections[edge].filter(c =>
+                        !(c.x === editingTile.x && c.y === editingTile.y)
+                    );
+                });
+            });
+
+            // Clear this tile's connections
+            editingTile.connections = { up: [], down: [], left: [], right: [] };
+
+            showConnectionEditor();
+            updateTilesetHighlights();
+            updateDefinedTilesList();
+        }
+
+        function selectAllForEdge() {
+            if (!editingTile || !editingEdge) return;
+
+            groundTiles.forEach(t => {
+                if (!editingTile.connections[editingEdge].find(c => c.x === t.x && c.y === t.y)) {
+                    editingTile.connections[editingEdge].push({ x: t.x, y: t.y });
+
+                    // Add reverse
+                    const opposite = { up: 'down', down: 'up', left: 'right', right: 'left' }[editingEdge];
+                    if (!t.connections[opposite].find(c => c.x === editingTile.x && c.y === editingTile.y)) {
+                        t.connections[opposite].push({ x: editingTile.x, y: editingTile.y });
+                    }
+                }
+            });
+
+            showConnectionEditor();
+            updateTilesetHighlights();
+            updateDefinedTilesList();
+        }
+
+        function selectNoneForEdge() {
+            if (!editingTile || !editingEdge) return;
+
+            // Remove reverse connections
+            editingTile.connections[editingEdge].forEach(c => {
+                const t = groundTiles.find(gt => gt.x === c.x && gt.y === c.y);
+                if (t) {
+                    const opposite = { up: 'down', down: 'up', left: 'right', right: 'left' }[editingEdge];
+                    t.connections[opposite] = t.connections[opposite].filter(
+                        rc => !(rc.x === editingTile.x && rc.y === editingTile.y)
+                    );
+                }
+            });
+
+            editingTile.connections[editingEdge] = [];
+
+            showConnectionEditor();
+            updateTilesetHighlights();
+            updateDefinedTilesList();
+        }
+
+        function updateTileId(value) {
+            if (editingTile) editingTile.id = value;
+            updateDefinedTilesList();
+        }
+
+        function updateTileWeight(value) {
+            if (editingTile) editingTile.weight = parseFloat(value);
+            updateDefinedTilesList();
+        }
+
+        function updateDefinedTilesList() {
+            const container = document.getElementById('definedTilesList');
+            document.getElementById('tileCount').textContent = groundTiles.length;
+
+            if (groundTiles.length === 0) {
+                container.innerHTML = '<div class="empty-state">No tiles added yet</div>';
+                return;
+            }
+
+            container.innerHTML = groundTiles.map((t, i) => {
+                const totalConnections = t.connections.up.length + t.connections.down.length +
+                    t.connections.left.length + t.connections.right.length;
+                return `
+                    <div class="defined-tile">
+                        <canvas width="40" height="40" id="defTile_${i}"></canvas>
+                        <div class="defined-tile-info">
+                            <strong>${t.id}</strong>
+                            <div>(${t.x}, ${t.y}) • w:${t.weight}</div>
+                            <div class="defined-tile-connections">
+                                <span class="conn-badge">↑${t.connections.up.length}</span>
+                                <span class="conn-badge">↓${t.connections.down.length}</span>
+                                <span class="conn-badge">←${t.connections.left.length}</span>
+                                <span class="conn-badge">→${t.connections.right.length}</span>
+                            </div>
+                        </div>
+                        <button class="btn-danger btn-small" onclick="removeTile(${i})">✕</button>
+                    </div>
+                `;
+            }).join('');
+
+            // Draw previews
+            groundTiles.forEach((t, i) => {
+                const canvas = document.getElementById(`defTile_${i}`);
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    ctx.imageSmoothingEnabled = false;
+                    ctx.drawImage(tileset, t.x * tileSize, t.y * tileSize, tileSize, tileSize, 0, 0, 40, 40);
+                }
+            });
+        }
+
+        function removeTile(index) {
+            const tile = groundTiles[index];
+
+            // Remove this tile from other tiles' connections
+            groundTiles.forEach(t => {
+                ['up', 'down', 'left', 'right'].forEach(edge => {
+                    t.connections[edge] = t.connections[edge].filter(c =>
+                        !(c.x === tile.x && c.y === tile.y)
+                    );
+                });
+            });
+
+            groundTiles.splice(index, 1);
+
+            if (editingTile === tile) {
+                editingTile = null;
+                editingEdge = null;
+                document.getElementById('connectionEditorArea').innerHTML =
+                    '<p style="color: #666;">Select a tile from the left panel to edit its connections.</p>';
+            }
+
+            updateTilesetHighlights();
+            updateSelectedTilesPreview();
+            updateDefinedTilesList();
+        }
+
+        function goToStep(step) {
+            if (step === 2 && groundTiles.length === 0) {
+                alert('Add at least one tile first!');
+                return;
+            }
+
+            currentStep = step;
+
+            // Update step indicators
+            document.querySelectorAll('.step').forEach((el, i) => {
+                el.classList.remove('active', 'completed');
+                if (i + 1 < step) el.classList.add('completed');
+                if (i + 1 === step) el.classList.add('active');
+            });
+
+            // Show/hide content
+            document.getElementById('step1Content').style.display = step === 1 ? 'flex' : 'none';
+            document.getElementById('step2Content').style.display = step === 2 ? 'flex' : 'none';
+            document.getElementById('step3Content').style.display = step === 3 ? 'flex' : 'none';
+
+            if (step === 2) {
+                editingTile = null;
+                editingEdge = null;
+                updateTilesetHighlights();
+            }
+
+            if (step === 3) {
+                generateCode();
+            }
+        }
+
+        function generateCode() {
+            // Convert connections to socket-based system
+            // Two edges that can connect get the SAME socket ID
+            // This uses a union-find approach to group compatible edges
+
+            let socketCounter = 0;
+
+            // Create unique edge identifiers
+            function edgeKey(tileX, tileY, direction) {
+                return `${tileX},${tileY},${direction}`;
+            }
+
+            // Map each edge to its socket
+            const edgeToSocket = new Map();
+
+            // Process all connection pairs and assign matching sockets
+            // For each connection A.right -> B, we need A.right and B.left to match
+            const oppositeEdge = { up: 'down', down: 'up', left: 'right', right: 'left' };
+
+            // Group edges that need to share a socket using union-find
+            const parent = new Map();
+
+            function find(edge) {
+                if (!parent.has(edge)) {
+                    parent.set(edge, edge);
+                }
+                if (parent.get(edge) !== edge) {
+                    parent.set(edge, find(parent.get(edge)));
+                }
+                return parent.get(edge);
+            }
+
+            function union(edge1, edge2) {
+                const root1 = find(edge1);
+                const root2 = find(edge2);
+                if (root1 !== root2) {
+                    parent.set(root1, root2);
+                }
+            }
+
+            // For each tile and each direction, union with the opposite edge of connected tiles
+            groundTiles.forEach(tile => {
+                ['up', 'down', 'left', 'right'].forEach(dir => {
+                    const myEdge = edgeKey(tile.x, tile.y, dir);
+                    const opposite = oppositeEdge[dir];
+
+                    tile.connections[dir].forEach(conn => {
+                        const theirEdge = edgeKey(conn.x, conn.y, opposite);
+                        union(myEdge, theirEdge);
+                    });
+                });
+            });
+
+            // Assign socket IDs to each group
+            const rootToSocket = new Map();
+            groundTiles.forEach(tile => {
+                ['up', 'down', 'left', 'right'].forEach(dir => {
+                    const edge = edgeKey(tile.x, tile.y, dir);
+                    const root = find(edge);
+                    if (!rootToSocket.has(root)) {
+                        rootToSocket.set(root, `s${socketCounter++}`);
+                    }
+                    edgeToSocket.set(edge, rootToSocket.get(root));
+                });
+            });
+
+            // Assign sockets based on connection patterns
+            const tilesWithSockets = groundTiles.map(t => ({
+                id: t.id,
+                position: { x: t.x, y: t.y },
+                weight: t.weight,
+                sockets: {
+                    up: edgeToSocket.get(edgeKey(t.x, t.y, 'up')),
+                    down: edgeToSocket.get(edgeKey(t.x, t.y, 'down')),
+                    left: edgeToSocket.get(edgeKey(t.x, t.y, 'left')),
+                    right: edgeToSocket.get(edgeKey(t.x, t.y, 'right'))
+                }
+            }));
+
+            const code = `/**
+ * Auto-generated Tileset Configuration
+ * Generated by Visual Tile Connector
+ * 
+ * ${groundTiles.length} tiles defined with ${rootToSocket.size} unique socket patterns
+ */
+
+import type { TileDefinition } from '../types';
+
+export const TILE_SIZE = ${tileSize};
+
+export const groundTiles: TileDefinition[] = [
+${tilesWithSockets.map(t => `    {
+        id: '${t.id}',
+        position: { x: ${t.position.x}, y: ${t.position.y} },
+        weight: ${t.weight},
+        sockets: { up: '${t.sockets.up}', down: '${t.sockets.down}', left: '${t.sockets.left}', right: '${t.sockets.right}' }
+    }`).join(',\n')}
+];
+
+export default groundTiles;
+`;
+
+            document.getElementById('outputCode').value = code;
+        }
+
+        function copyCode() {
+            document.getElementById('outputCode').select();
+            document.execCommand('copy');
+            alert('Code copied to clipboard!');
+        }
+
+        function downloadCode() {
+            const code = document.getElementById('outputCode').value;
+            const blob = new Blob([code], { type: 'text/typescript' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'tilesetConfig.ts';
+            a.click();
+        }
+    </script>
+</body>
+
+</html>

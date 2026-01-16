@@ -44,7 +44,6 @@ function initContainer() {
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div id="walking-pet-container">
-    <canvas id="petCanvas" width="96" height="96"></canvas>
   </div>
 `;
 
@@ -70,13 +69,11 @@ async function initApp() {
     }
   });
 
-  // Initialize pet
-  const canvas = document.getElementById('petCanvas') as HTMLCanvasElement;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-
-  const virtualPet = new VirtualPet('assets/png_pets/black_4.png', ctx);
+  // Initialize pets
+  const virtualPet = new VirtualPet('assets/png_pets/black_4.png', container);
+  const virtualPet2 = new VirtualPet('assets/png_pets/black_2.png', container);
   virtualPet.setPetState({ action: 'running_fast', direction: 'right', randomActions: true });
+  virtualPet2.setPetState({ action: 'walking', direction: 'down-right', randomActions: true });
 }
 
 initApp();
@@ -87,6 +84,7 @@ type FrameProgress = {
   intervalId?: number;
   frameLocked?: Date;
   revertCycle: number;
+  currentMs: number;
 };
 type PetState = {
   action: ACTION;
@@ -96,11 +94,13 @@ type PetState = {
 type ACTION = 'walking' | 'running' | 'running_fast' | 'sitting' | 'looking_around' | 'laying_down';
 type Direction = 'down' | 'left' | 'right' | 'up' | 'down-left' | 'down-right' | 'up-left' | 'up-right';
 type FrameProperties = {
-  startingFrameX: number;
+  startingFrameSourceX: number;
+  startingFrame?: number;
   totalFrames: number;
   msInterval: number;
   possibleActions?: ACTION[];
   singleCycle?: boolean;
+  reverseCycle?: boolean;
   lockLastFrame?: {
     minMs?: number;
     maxMs?: number;
@@ -123,43 +123,50 @@ class FrameLocationState {
 
   public static ACTIONS: Record<ACTION, FrameProperties> = {
     walking: {
-      startingFrameX: 12,
+      startingFrameSourceX: 12,
       totalFrames: 4,
-      msInterval: 300,
+      msInterval: 140,
       possibleActions: ['walking', 'walking', 'running', 'sitting', 'sitting', 'sitting']
     },
     running: {
-      startingFrameX: 16,
+      startingFrameSourceX: 16,
       totalFrames: 5,
-      msInterval: 150,
+      msInterval: 120,
       possibleActions: ['walking', 'running_fast']
     },
     running_fast: {
-      startingFrameX: 20,
+      startingFrameSourceX: 20,
       totalFrames: 8,
-      msInterval: 120,
+      msInterval: 80,
       possibleActions: ['running']
     },
     sitting: {
-      startingFrameX: 0,
+      startingFrameSourceX: 0,
       totalFrames: 6,
+<<<<<<< HEAD
       msInterval: 320,
       possibleActions: ['sitting', 'looking_around', 'laying_down', 'walking'],
       actionsBeforeReverse: ['sitting', 'looking_around', 'laying_down'],
+=======
+      msInterval: 220,
+      possibleActions: ['looking_around', 'laying_down', 'walking'],
+      actionsBeforeReverse: ['looking_around', 'laying_down'],
+>>>>>>> origin/master
       actionsAfterReverse: ['walking'],
       singleCycle: true,
-      lockLastFrame: { minMs: 1000, maxMs: 4000 }
     },
     looking_around: {
-      startingFrameX: 4,
+      startingFrameSourceX: 4,
+      startingFrame: 2,
       totalFrames: 5,
-      msInterval: 320,
-      possibleActions: ['sitting']
+      msInterval: 220,
+      possibleActions: ['sitting', 'looking_around', 'laying_down'],
+      reverseCycle: true,
     },
     laying_down: {
-      startingFrameX: 8,
+      startingFrameSourceX: 8,
       totalFrames: 8,
-      msInterval: 320,
+      msInterval: 220,
       possibleActions: ['sitting'],
       actionsBeforeReverse: ['laying_down'],
       actionsAfterReverse: ['sitting'],
@@ -247,14 +254,21 @@ class VirtualPet {
   private image_src: string;
   private petImage: HTMLImageElement;
   private ctx: CanvasRenderingContext2D;
-  private frameProgress: FrameProgress = { currentFrame: 0, totalFrames: 4, revertCycle: 0 };
+  private frameProgress: FrameProgress = { currentFrame: 0, totalFrames: 4, revertCycle: 0, currentMs: 0 };
   private petState: PetState = { action: 'walking', direction: 'down' };
   private randomDuration: number = 0;
 
-  constructor(image_src: string, ctx: CanvasRenderingContext2D) {
+  constructor(image_src: string, container: HTMLDivElement) {
     this.image_src = image_src;
     this.petImage = new Image();
     this.petImage.src = this.image_src;
+    const canvas = document.createElement('canvas');
+    canvas.width = 96;
+    canvas.height = 96;
+    canvas.id = 'petCanvas';
+    container.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Could not get canvas context');
     this.ctx = ctx;
     this.drawFrame();
   }
@@ -269,6 +283,7 @@ class VirtualPet {
       clearInterval(this.frameProgress.intervalId);
     }
 
+    //  // Start Random Action Changes outside of main interval
     // if (this.petState.randomActions && !this.randomIntervalId) {
     //   this.randomIntervalId = setInterval(() => {
     //     if (this.frameProgress.frameLocked || this.frameProgress.revertCycle > 0) return; // Do not change action if frame is locked
@@ -280,6 +295,7 @@ class VirtualPet {
     // }
 
     this.frameProgress.intervalId = setInterval(() => {
+<<<<<<< HEAD
       let { currentFrame, totalWalkingFrames } = this.retrieveWalkingAnimationFrames();
       // console.log('current:', currentFrame, totalWalkingFrames);
 
@@ -309,6 +325,55 @@ class VirtualPet {
 
       if (FrameLocationState.ACTIONS[this.petState.action].singleCycle && currentFrame + 1 >= totalWalkingFrames && this.frameProgress.revertCycle === 0) {
         if (FrameLocationState.ACTIONS[this.petState.action].lockLastFrame && !this.frameProgress.frameLocked) {
+=======
+      if (this.frameProgress.currentMs === FrameLocationState.ACTIONS[this.petState.action].msInterval) {
+        this.frameProgress.currentMs = 0;
+      } else {
+        this.frameProgress.currentMs += 20;
+        return;
+      }
+
+      let { currentFrame, totalWalkingFrames } = this.retrieveWalkingAnimationFrames();
+      let hasChangedActionThisCycle = false;
+      // Handle Random Action Changes inside main interval
+      if (this.petState.randomActions && this.randomDuration < Date.now()) {
+        this.setRandomDuration(3500, 6000);
+
+        const lockFrameActive = this.isLockFrameActive();
+        const isInSingleCycleAction = FrameLocationState.ACTIONS[this.petState.action].singleCycle;
+        if (!lockFrameActive && !isInSingleCycleAction) {
+          const possibleActions = FrameLocationState.ACTIONS[this.petState.action].actionsBeforeReverse
+            || FrameLocationState.ACTIONS[this.petState.action].possibleActions || [];
+          const randomIndex = Math.floor(Math.random() * possibleActions.length);
+          const newPossibleState = { ...this.petState };
+          newPossibleState.action = possibleActions[randomIndex];
+
+          if (FrameLocationState.ACTIONS[newPossibleState.action].actionsBeforeReverse &&
+            FrameLocationState.ACTIONS[newPossibleState.action].actionsBeforeReverse!.includes(this.petState.action)) {
+            const newAction = possibleActions[randomIndex];
+            this.frameProgress.revertCycle = FrameLocationState.ACTIONS[newAction].totalFrames;
+            currentFrame = FrameLocationState.ACTIONS[newAction].totalFrames;
+            totalWalkingFrames = FrameLocationState.ACTIONS[newAction].totalFrames;
+            console.log(`Reversing animation for action: ${this.petState.action}`);
+          } else {
+            this.frameProgress.revertCycle = 0;
+            if (this.petState.action !== newPossibleState.action) currentFrame = (FrameLocationState.ACTIONS[this.petState.action].startingFrame ?? 0) - 1;
+          }
+
+          this.petState = newPossibleState;
+          hasChangedActionThisCycle = true;
+          console.log(`Randomly changed action to: ${this.petState.action}`);
+        }
+      }
+
+      const hasHitEndOfCycle = FrameLocationState.ACTIONS[this.petState.action].singleCycle &&
+        currentFrame + 1 >= totalWalkingFrames && this.frameProgress.revertCycle === 0 && !hasChangedActionThisCycle;
+
+      // Handle Action Completion for single cycle actions
+      if (hasHitEndOfCycle) {
+        const lockFrameActive = FrameLocationState.ACTIONS[this.petState.action].lockLastFrame && !this.isLockFrameActive();
+        if (lockFrameActive) {
+>>>>>>> origin/master
           const lockConfig = FrameLocationState.ACTIONS[this.petState.action].lockLastFrame!;
           const minMs = lockConfig.minMs || 1000;
           const maxMs = lockConfig.maxMs || 3000;
@@ -338,29 +403,36 @@ class VirtualPet {
           currentFrame = FrameLocationState.ACTIONS[newAction].totalFrames;
           totalWalkingFrames = FrameLocationState.ACTIONS[newAction].totalFrames;
           console.log(`Reversing animation for action: ${this.petState.action}`);
+        } else {
+          this.frameProgress.revertCycle = 0;
+          if (this.petState.action !== newPossibleState.action) currentFrame = (FrameLocationState.ACTIONS[this.petState.action].startingFrame ?? 0) - 1;
         }
 
         this.petState = newPossibleState;
+        this.setRandomDuration(2500, 5000);
         console.log(`Action ${this.petState.action} completed its cycle. Changing to ${newPossibleState.action}`);
       }
 
 
       // Line of Setting the Next frame
       if (this.frameProgress.revertCycle > 0) {
-        console.log("revertCycle:", this.frameProgress.revertCycle);
         this.frameProgress.currentFrame = (currentFrame - 1) % totalWalkingFrames;
         if (this.frameProgress.currentFrame == 0) {
-          const possibleActionsAfterReverse = FrameLocationState.ACTIONS[this.petState.action].actionsAfterReverse || [];
-          if (possibleActionsAfterReverse.length > 0) {
-            const randomIndex = Math.floor(Math.random() * possibleActionsAfterReverse.length);
-            this.petState.action = possibleActionsAfterReverse[randomIndex];
-            this.frameProgress.currentFrame = FrameLocationState.ACTIONS[this.petState.action].totalFrames - 1;
-            console.log(`Reversal complete. Changing action to: ${this.petState.action}`);
-          }
+          this.handleActionAfterReverseCompletion();
         }
         this.frameProgress.revertCycle--;
+        if (FrameLocationState.ACTIONS[this.petState.action].reverseCycle == false) {
+          this.frameProgress.revertCycle = 0;
+        }
       } else {
         this.frameProgress.currentFrame = (currentFrame + 1) % totalWalkingFrames;
+<<<<<<< HEAD
+=======
+        if (FrameLocationState.ACTIONS[this.petState.action].reverseCycle && this.frameProgress.currentFrame === 0) {
+          this.frameProgress.currentFrame = FrameLocationState.ACTIONS[this.petState.action].totalFrames - 1;
+          this.frameProgress.revertCycle = FrameLocationState.ACTIONS[this.petState.action].totalFrames - 1;
+        }
+>>>>>>> origin/master
       }
 
 
@@ -372,16 +444,39 @@ class VirtualPet {
         const randomIndex = Math.floor(Math.random() * possibleDirections.length);
         this.petState.direction = possibleDirections[randomIndex];
       }
-    }, FrameLocationState.ACTIONS[this.petState.action].msInterval);
+      // Apparantly interval will not change.. even if msInterval is changed dynamically
+    }, 20);
   }
 
+  private isLockFrameActive(): boolean {
+    return this.frameProgress.frameLocked !== undefined;
+  }
+
+  private setRandomDuration(minMs: number, maxMs: number) {
+    const duration = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
+    this.randomDuration = new Date(Date.now() + duration).getTime();
+    console.log(`Next random action change in ${duration} ms`);
+  }
+
+  private handleActionAfterReverseCompletion() {
+    const possibleActionsAfterReverse = FrameLocationState.ACTIONS[this.petState.action].actionsAfterReverse || [];
+    if (possibleActionsAfterReverse.length > 0) {
+      const randomIndex = Math.floor(Math.random() * possibleActionsAfterReverse.length);
+      this.petState.action = possibleActionsAfterReverse[randomIndex];
+      this.frameProgress.currentFrame = FrameLocationState.ACTIONS[this.petState.action].startingFrame 
+        ?? (FrameLocationState.ACTIONS[this.petState.action].totalFrames - 1);
+    }
+  }
 
   private retrieveWalkingAnimationFrames() {
-    const currentFrame = this.frameProgress.currentFrame;
+    let currentFrame = this.frameProgress.currentFrame;
     let directionY = FrameLocationState.DIRECTIONS[this.petState.direction];
     if (currentFrame >= 4) directionY += 1; // Move to next row for walking animation
-    const startFrame = FrameLocationState.ACTIONS[this.petState.action].startingFrameX;
+    const startFrame = FrameLocationState.ACTIONS[this.petState.action].startingFrameSourceX;
     const totalWalkingFrames = FrameLocationState.ACTIONS[this.petState.action].totalFrames;
+    if (currentFrame >= totalWalkingFrames) {
+      currentFrame = 0;
+    }
     this.drawFrame(startFrame + (currentFrame % 4), directionY);
     return { currentFrame, totalWalkingFrames };
   }
@@ -403,10 +498,17 @@ class VirtualPet {
     const parentWidth = parent ? parent.clientWidth : window.innerWidth;
     const parentHeight = parent ? parent.clientHeight : window.innerHeight;
 
+<<<<<<< HEAD
     const hitHorizontal = newLeft < 0 ? 'left' :
       newRight > parentWidth ? 'right' : null;
     const hitVertical = newTop < 0 ? 'up' :
       newBottom > parentHeight ? 'down' : null;
+=======
+    const hitHorizontal = newLeft < parentLeft ? 'left' :
+      newRight > parentRight ? 'right' : null;
+    const hitVertical = newTop < parentTop ? 'up' :
+      newBottom > parentBottom ? 'down' : null;
+>>>>>>> origin/master
 
     let hitDirection: Direction | null = hitVertical;
     if (hitHorizontal) {
@@ -431,8 +533,13 @@ class VirtualPet {
     const currentLeft = parseFloat(canvas.style.left) || 0;
     const currentTop = parseFloat(canvas.style.top) || 0;
     canvas.style.position = 'absolute';
+<<<<<<< HEAD
     canvas.style.left = `${currentLeft + xSpeed}px`;
     canvas.style.top = `${currentTop + ySpeed}px`;
+=======
+    canvas.style.left = `${rect.left + xSpeed}px`;
+    canvas.style.top = `${rect.top + ySpeed}px`;
+>>>>>>> origin/master
 
   }
 

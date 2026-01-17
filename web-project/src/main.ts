@@ -72,8 +72,10 @@ async function initApp() {
   // Initialize pets
   const virtualPet = new VirtualPet('assets/png_pets/black_4.png', container);
   const virtualPet2 = new VirtualPet('assets/png_pets/black_2.png', container);
+  const virtualPet3 = new VirtualPet('assets/png_pets/orange_0.png', container);
   virtualPet.setPetState({ action: 'running_fast', direction: 'right', randomActions: true });
   virtualPet2.setPetState({ action: 'walking', direction: 'down-right', randomActions: true });
+  virtualPet3.setPetState({ action: 'looking_around', direction: 'down-right', randomActions: true });
 }
 
 initApp();
